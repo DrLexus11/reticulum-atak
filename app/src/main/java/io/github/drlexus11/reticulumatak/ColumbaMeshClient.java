@@ -55,6 +55,12 @@ public final class ColumbaMeshClient {
     private final ExecutorService commands = Executors.newSingleThreadExecutor();
     private IColumbaMesh mesh;
     private boolean bound;
+    /**
+     * Bumped by stop(): a callback or command result posted before the stop
+     * must not reach a listener that has been torn down -- it could redraw a
+     * dead panel, or re-create ATAK's link after the plugin stopped.
+     */
+    private volatile int generation;
 
     private final IColumbaMeshWatcher watcher = new IColumbaMeshWatcher.Stub() {
         @Override
@@ -106,8 +112,8 @@ public final class ColumbaMeshClient {
     }
 
     public void start() {
-        if (bound)
-            return;
+        if (bound || commands.isShutdown())
+            return;   // already bound, or disposed for good
         deliver(State.CONNECTING, null);
         for (String pkg : PACKAGES) {
             Intent intent = new Intent(ACTION).setPackage(pkg);
@@ -130,7 +136,14 @@ public final class ColumbaMeshClient {
         deliver(State.NOT_FOUND, null);
     }
 
+    /** For good: stop, and end the command thread. start() must not follow. */
+    public void dispose() {
+        stop();
+        commands.shutdownNow();
+    }
+
     public void stop() {
+        generation++;
         IColumbaMesh current = mesh;
         mesh = null;
         if (current != null) {
@@ -151,6 +164,9 @@ public final class ColumbaMeshClient {
     /** Ask Columba to announce this node. Off the main thread: it can take seconds. */
     public void announce(Result result) {
         final IColumbaMesh current = mesh;
+        final int asked = generation;
+        if (commands.isShutdown())
+            return;
         commands.execute(() -> {
             int code;
             if (current == null) {
@@ -163,11 +179,18 @@ public final class ColumbaMeshClient {
                 }
             }
             final int reply = code;
-            main.post(() -> result.onResult(reply));
+            main.post(() -> {
+                if (asked == generation)
+                    result.onResult(reply);
+            });
         });
     }
 
     private void deliver(State state, MeshSnapshot snapshot) {
-        main.post(() -> listener.onMesh(state, snapshot));
+        final int posted = generation;
+        main.post(() -> {
+            if (posted == generation)
+                listener.onMesh(state, snapshot);
+        });
     }
 }

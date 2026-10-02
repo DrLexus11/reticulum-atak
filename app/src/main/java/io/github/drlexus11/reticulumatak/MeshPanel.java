@@ -54,7 +54,9 @@ final class MeshPanel implements ColumbaMeshClient.Listener {
         announce.setOnClickListener(v -> {
             announce.setEnabled(false);
             client.announce(code -> {
-                announce.setEnabled(true);
+                // From the state now, not the one the request was made in:
+                // Columba may have gone away while it was answering.
+                announce.setEnabled(canAnnounce());
                 say(MeshLines.announce(code));
             });
         });
@@ -69,8 +71,13 @@ final class MeshPanel implements ColumbaMeshClient.Listener {
     }
 
     void stop() {
-        client.stop();
+        client.dispose();
         link.stop();
+    }
+
+    private boolean canAnnounce() {
+        return lastState == ColumbaMeshClient.State.CONNECTED && lastSnapshot != null
+                && lastSnapshot.node.running;
     }
 
     @Override
@@ -92,7 +99,7 @@ final class MeshPanel implements ColumbaMeshClient.Listener {
         status.setText(MeshLines.node(snapshot, ColumbaLink.connected()));
         commandPost.setText(MeshLines.commandPost(snapshot));
         relay.setText(MeshLines.relay(snapshot));
-        announce.setEnabled(snapshot.node.running);
+        announce.setEnabled(canAnnounce());
         peers.removeAllViews();
         for (MeshSnapshot.Peer peer : snapshot.peers)
             peers.addView(row(peer, now));

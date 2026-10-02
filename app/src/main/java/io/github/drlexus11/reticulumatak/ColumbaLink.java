@@ -30,9 +30,14 @@ final class ColumbaLink {
         void onLinkChanged();
     }
 
+    /** How long an add may wait for ATAK's CoT service before it may be tried again. */
+    static final long PENDING_TIMEOUT_MS = 30_000;
+
     private final Listener listener;
     private CotServiceRemote remote;
-    private boolean pendingAdd;
+    /** Whether [remote] is connected: connect() on a connected remote calls nobody back. */
+    private boolean serviceUp;
+    private long pendingSince;
 
     ColumbaLink(Listener listener) {
         this.listener = listener;
@@ -70,9 +75,19 @@ final class ColumbaLink {
      * CoT service answers. True if an add was started.
      */
     boolean ensure() {
-        if (exists() || pendingAdd)
+        if (exists())
             return false;
-        pendingAdd = true;
+        long now = System.currentTimeMillis();
+        if (pendingSince != 0 && now - pendingSince < PENDING_TIMEOUT_MS)
+            return false;
+        if (remote != null && serviceUp) {
+            // Already connected: a second connect() would be a silent no-op,
+            // and a connection removed after the first add would never return.
+            addStream();
+            listener.onLinkChanged();
+            return true;
+        }
+        pendingSince = now;
         if (remote == null) {
             remote = new CotServiceRemote();
             remote.setOutputsChangedListener(new CotServiceRemote.OutputsChangedListener() {
@@ -90,24 +105,31 @@ final class ColumbaLink {
         remote.connect(new CotServiceRemote.ConnectionListener() {
             @Override
             public void onCotServiceConnected(Bundle fullServiceState) {
-                if (pendingAdd && !exists()) {
-                    Bundle stream = new Bundle();
-                    stream.putString(TAKServer.DESCRIPTION_KEY, DESCRIPTION);
-                    stream.putBoolean(TAKServer.ENABLED_KEY, true);
-                    stream.putBoolean(TAKServer.COMPRESSION_KEY, false);
-                    stream.putBoolean(TAKServer.USEAUTH_KEY, false);
-                    remote.addStream(CONNECT, stream);
-                }
-                pendingAdd = false;
+                serviceUp = true;
+                if (pendingSince != 0 && !exists())
+                    addStream();
+                pendingSince = 0;
                 listener.onLinkChanged();
             }
 
             @Override
             public void onCotServiceDisconnected() {
-                pendingAdd = false;
+                serviceUp = false;
+                pendingSince = 0;
             }
         });
         return true;
+    }
+
+    private void addStream() {
+        if (remote == null || exists())
+            return;
+        Bundle stream = new Bundle();
+        stream.putString(TAKServer.DESCRIPTION_KEY, DESCRIPTION);
+        stream.putBoolean(TAKServer.ENABLED_KEY, true);
+        stream.putBoolean(TAKServer.COMPRESSION_KEY, false);
+        stream.putBoolean(TAKServer.USEAUTH_KEY, false);
+        remote.addStream(CONNECT, stream);
     }
 
     void stop() {
@@ -115,7 +137,8 @@ final class ColumbaLink {
             remote.disconnect();
             remote = null;
         }
-        pendingAdd = false;
+        serviceUp = false;
+        pendingSince = 0;
     }
 
     private static TAKServer[] servers() {
