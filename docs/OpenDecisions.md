@@ -3,27 +3,64 @@
 Each of these shapes code that would be expensive to change. They are decided
 here, in writing, before that code exists.
 
-## 1. How the plugin reads the phone node's state -- open, blocks everything
+## 1. How the plugin reads the phone node's state -- decided 2026-10-02
 
-The plugin runs inside ATAK's process; Reticulum runs in Columba's. Options:
+**A bound Android service exported by Columba, gated by a caller allow-list.**
 
-- **Bound Android service (AIDL) exported by Columba.** Typed, push and pull,
-  permission-gated by signature or a custom permission. Needs a stable
-  interface version in Columba and a client here.
-- **Local socket from Columba** (the CoT endpoint, or a second one for state).
-  Reuses an existing channel; state would be a new message family on it.
-- **Content provider exported by Columba.** Natural for queues and history,
-  awkward for live updates.
+Columba declares a "Reticulum state" service with an AIDL interface: calls such
+as delivery state for an item, the outbound queue per recipient, the path to a
+destination (known, hops, next-hop carrier), propagation-node holdings, and a
+subscription for changes, so the plugin is told rather than polling. Typed,
+versioned (the plugin checks the interface version on connect), live. Columba
+owns the interface; this plugin is a client.
 
-Whichever is chosen, Columba owns the interface and its version; this plugin is
-a client. The choice also decides how much of Columba's Reticulum state is
-exposed to other apps, so it is a security decision as much as a plumbing one.
+**Why not a signature permission.** The first proposal locked the service to
+apps signed with our key. That cannot work for an ATAK plugin: ATAK loads a
+plugin's code into ATAK's own process, so the binding arrives from ATAK, signed
+by TAK, not by us -- a signature lock would refuse our own plugin, and a plugin
+cannot add permissions to ATAK's manifest.
+
+**The gate instead:** on every bind, Columba checks the calling package and its
+signing certificate against a short allow-list -- ATAK-CIV's package
+(`com.atakmap.app.civ`) with TAK's certificate digest, and deliberately added
+entries such as a development build of ATAK. Anything else gets nothing.
+
+**Read-only.** The service exposes state and subscriptions only. Sending,
+deleting and identity operations stay inside Columba.
+
+**Accepted cost:** every plugin loaded into an allowed ATAK can reach the
+service, not only this one -- the price of running in ATAK's process. Acceptable
+because the data is read-only and a phone running ATAK already trusts the
+plugins it loaded.
+
+Alternatives considered: a local socket (the CoT endpoint or a second one) has
+the same caller problem with weaker means of checking the caller; a content
+provider suits lists but not live updates. The Columba side lands as its own
+pull request in Columba when the plugin work starts.
 
 ## 2. ATAK-CIV SDK and ATAK version -- open, blocks the scaffold
 
-The SDK comes from TAK.gov to a registered developer and must match the ATAK
-build on the phones. Needed: the SDK, the ATAK version it targets, and a
-plugin-signing setup. `urban-tak` needs the same; one setup should serve both.
+The SDK must match the ATAK build it loads into. Checked 2026-10-02:
+
+- **Source: the official `TAK-Product-Center/atak-civ` repository on GitHub**
+  -- public, active, release tags through 5.5.1.10, with `pluginsdk.zip` (Git
+  LFS), the plugin examples and ATAK-CIV's source. tak.gov (a free account)
+  carries the same SDKs and may have versions newer than the repository's tags.
+  Not the archived `deptofdefense/AndroidTacticalAssaultKit-CIV` (read-only
+  since 2025-05-02, ATAK 4.x era), and not unofficial mirrors, whose
+  provenance and licensing cannot be checked.
+- **Signing, two cases.** On the bench: a *developer* ATAK -- the build that
+  ships with the SDK, or one built from the repository and signed with our own
+  key -- loads plugins signed with the matching development key. The *official*
+  ATAK (store builds) uses a different certificate and refuses a locally signed
+  plugin; it needs the build returned by TAK.gov's third-party pipeline (a
+  source zip submitted at tak.gov/user_builds).
+- So the bench phones run a developer ATAK while the plugin is being built, and
+  the official ATAK only once a pipeline build exists. The caller allow-list in
+  decision 1 then lists both ATAK certificates.
+
+Waiting on: the ATAK version on the phones, to pick the matching SDK tag.
+`urban-tak` needs the same setup; one serves both.
 
 ## 3. Licence -- open
 
