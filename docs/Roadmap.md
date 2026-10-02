@@ -23,14 +23,16 @@ ATAK alone:
    with hop count and next-hop carrier, whether the command post is reachable
    over the mesh, last heard. A locate button per peer pans the map to its
    marker (peers are ATAK contacts under their Reticulum-derived UIDs, so the
-   marker is found by UID). Board health from the firmware's telemetry.
+   marker is found by UID). Board health joins it once decision 4 (where
+   mesh-health data comes from) is made; it is not in PR F.
 2. **Messaging through GeoChat** -- a peer's message button opens ATAK's own
    GeoChat with that contact, which already travels over LXMF through
    Columba; the plugin adds no chat of its own. An **announce** button, in
    reach on the panel.
 3. **Interfaces** -- Columba's configured interfaces shown, and switched from
-   ATAK, with a guard against switching off the one the phone is connected
-   through or the last one up.
+   ATAK. Columba refuses a switch that would leave the phone without a path to
+   the command post or with no interface up (`OpenDecisions.md` 1): the guard
+   is in the command, not the plugin's UI.
 4. **Propagation node** -- pinned to the command post, with fleet fallback
    (`OpenDecisions.md`, 5). The panel says which node is in use, in one line,
    state first.
@@ -60,7 +62,7 @@ fetching** (a file's size against the route's measured rate).
    panel needs, the caller allow-list, the "allow ATAK control" gate, and the
    first command, announce.
 5. **Mesh panel** with locate, open-GeoChat and announce; the propagation
-   node's status.
+   node's status. Board health waits for decision 4.
 6. **Outdoor Test 1** with the plugin installed.
 
 **After Outdoor Test 1**, each its own pull request: interfaces; propagation

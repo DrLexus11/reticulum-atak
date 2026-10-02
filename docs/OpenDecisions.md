@@ -35,6 +35,11 @@ user (messages go through ATAK's GeoChat, as today), deleting, identity
 operations. (First decided read-only; the features agreed the same day need
 the four commands.)
 
+**Guards live in Columba, not in the plugin.** Any plugin loaded in ATAK can
+call the service, so a check in this plugin's UI protects nothing. Columba
+refuses, with its own result code, an interface switch that would leave the
+phone without a path to the command post or without any interface up.
+
 **Accepted cost:** every plugin loaded into an allowed ATAK can reach the
 service, not only this one -- the price of running in ATAK's process. Reading is
 acceptable because a phone running ATAK already trusts the plugins it loaded;

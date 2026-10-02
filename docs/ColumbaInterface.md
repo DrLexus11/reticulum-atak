@@ -65,7 +65,9 @@ Result codes: `0 OK`, `1 ERR_CALLER` (not on the allow-list), `2 ERR_CONTROL_OFF
 running), `4 ERR_RATE_LIMITED`.
 
 Commands added after PR F -- switch an interface, select the propagation node,
-fetch a NomadNet page -- arrive as version 2, with their own codes.
+fetch a NomadNet page -- arrive as version 2, with their own codes. The
+interface switch carries its guard in Columba: a switch that would leave no
+path to the command post, or no interface up, is refused there.
 
 **Announce is rate-limited, and not out of politeness.** Reticulum relays block
 a destination that announces faster than their rate allowance, which costs the
