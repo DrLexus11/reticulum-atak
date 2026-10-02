@@ -33,8 +33,8 @@ Scaffolding. See `docs/Roadmap.md` for the order of work and
 
 Not yet. An ATAK plugin builds against the ATAK-CIV SDK, which TAK.gov
 distributes to registered developers rather than through a public package
-repository, and the SDK version must match the ATAK build the plugin loads
-into. Setup instructions land with the first build.
+repository. `docs/Setup.md` covers the SDK, the bench device, and which ATAK
+version the bench and releases each build against.
 
 ## Contributing
 

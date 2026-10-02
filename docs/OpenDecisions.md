@@ -38,7 +38,7 @@ the same caller problem with weaker means of checking the caller; a content
 provider suits lists but not live updates. The Columba side lands as its own
 pull request in Columba when the plugin work starts.
 
-## 2. ATAK-CIV SDK and ATAK version -- open, blocks the scaffold
+## 2. ATAK-CIV SDK and ATAK version -- decided 2026-10-02
 
 The SDK must match the ATAK build it loads into. Checked 2026-10-02:
 
@@ -59,8 +59,12 @@ The SDK must match the ATAK build it loads into. Checked 2026-10-02:
   the official ATAK only once a pipeline build exists. The caller allow-list in
   decision 1 then lists both ATAK certificates.
 
-Waiting on: the ATAK version on the phones, to pick the matching SDK tag.
-`urban-tak` needs the same setup; one serves both.
+**Decided:** the bench builds against SDK 5.5.1.8, the newest published, and
+runs the developer ATAK 5.5.1.8 on the spare phone. Releases go through the
+pipeline, which fetches the SDK for the declared `ATAK_VERSION` from TAK's Maven
+repository, so they target the phones' ATAK (5.6 and 5.8 at the time) without a
+local SDK of that version. Details and the pipeline's requirements:
+`Setup.md`. `urban-tak` needs the same setup; one serves both.
 
 ## 3. Licence -- open
 
