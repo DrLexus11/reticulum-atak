@@ -51,7 +51,8 @@ fetching** (a file's size against the route's measured rate).
 
 **PR F, before Outdoor Test 1:**
 
-1. Decisions -- **made** (`OpenDecisions.md` 1, 2, 5).
+1. Decisions -- **made** (`OpenDecisions.md` 1, 2, 5); the interface they
+   imply, `ColumbaInterface.md`, with its fixture.
 2. Mesh telemetry, in the firmware repository (F1-F5).
 3. Scaffold -- **done**, and the release path proven through TAK.gov's
    pipeline.
