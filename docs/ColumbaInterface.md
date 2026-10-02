@@ -21,10 +21,10 @@ what the plugin's features need.
 ## The service
 
 - Declared by Columba, `exported="true"`, action
-  `network.columba.app.mesh.BIND`, no permission. The plugin binds by action
-  with an explicit package, trying `network.columba.app` and then
-  `network.columba.app.debug` (the bench phones run the debug build) (a plugin cannot add one to
-  ATAK's manifest; `OpenDecisions.md` 1).
+  `network.columba.app.mesh.BIND`, and no permission: a plugin cannot add one
+  to ATAK's manifest (`OpenDecisions.md` 1).
+- The plugin binds by action with an explicit package: `network.columba.app`
+  first, then `network.columba.app.debug`, which the bench phones run.
 - Runs in Columba's app process, beside the TAK endpoint that already holds the
   member table and the propagation manager.
 - **Every call checks its caller.** `Binder.getCallingUid()` gives the
@@ -99,7 +99,7 @@ know is `null`, never omitted and never a guess.
     "path": true,
     "hops": 2,
     "carrier": "lora",
-    "is_command_post": true,
+    "is_command_post": null,
     "last_sync": 1789999990000
   },
   "peers": [
@@ -141,9 +141,13 @@ know is `null`, never omitted and never a guess.
 
 `fixtures/columba_mesh_v1.json` (in both repositories): snapshots that both
 sides must parse to the same values -- a full one, one with no propagation node
-and no paths, one with every optional field `null`. Columba's tests build each
-from a fake member table and path table and compare; the plugin's tests parse
-each and check what the panel would show.
+and no paths, one with every optional field `null`. Columba parses each and
+writes it back unchanged, so it can neither drop a field nor turn a `null`
+into a value; the plugin parses each and checks the lines in its `expect`
+block. The full snapshot carries `is_command_post: true` although Columba sends
+`null` today: the fixture covers what a version 1 snapshot may hold, not what
+the first implementation happens to produce. The `expect` block is the plugin's
+-- the lines the panel shows for each snapshot.
 
 ## Order
 
