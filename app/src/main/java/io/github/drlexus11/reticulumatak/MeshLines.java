@@ -49,10 +49,16 @@ public final class MeshLines {
         return route + " · " + age(now - peer.heard);
     }
 
-    /** The node line: "Mesh: 3 peers", "Mesh: TAK endpoint off in Columba". */
-    public static String node(MeshSnapshot snapshot) {
+    /**
+     * The node line: "Mesh: 3 peers", "Mesh: TAK endpoint off in Columba",
+     * "Mesh: ATAK not linked to Columba" -- the last outranks the peer count,
+     * because with no link ATAK shows none of those peers.
+     */
+    public static String node(MeshSnapshot snapshot, boolean atakLinked) {
         if (!snapshot.node.running)
             return "Mesh: TAK endpoint off in Columba";
+        if (!atakLinked)
+            return "Mesh: ATAK not linked to Columba";
         int n = snapshot.peers.size();
         return "Mesh: " + n + (n == 1 ? " peer" : " peers");
     }

@@ -69,6 +69,28 @@ public class MeshSnapshotTest {
     }
 
     @Test
+    public void theNodeLineSaysWhenAtakIsNotLinked() throws Exception {
+        MeshSnapshot snapshot = MeshSnapshot.parse(
+                cases().getJSONObject(0).getJSONObject("snapshot").toString());
+        assertEquals("Mesh: 3 peers", MeshLines.node(snapshot, true));
+        assertEquals("Mesh: ATAK not linked to Columba", MeshLines.node(snapshot, false));
+        MeshSnapshot off = MeshSnapshot.parse(
+                cases().getJSONObject(2).getJSONObject("snapshot").toString());
+        assertEquals("Mesh: TAK endpoint off in Columba", MeshLines.node(off, false));
+    }
+
+    @Test
+    public void onlyAStreamOnTheEndpointPortCounts() {
+        org.junit.Assert.assertTrue(ColumbaLink.sameEndpoint("127.0.0.1:18087:tcp"));
+        org.junit.Assert.assertTrue(ColumbaLink.sameEndpoint("192.168.240.1:18087:tcp"));
+        org.junit.Assert.assertTrue(ColumbaLink.sameEndpoint(" 127.0.0.1:18087:TCP "));
+        org.junit.Assert.assertFalse(ColumbaLink.sameEndpoint("127.0.0.1:8087:tcp"));
+        org.junit.Assert.assertFalse(ColumbaLink.sameEndpoint("127.0.0.1:18087:ssl"));
+        org.junit.Assert.assertFalse(ColumbaLink.sameEndpoint("tak.example:8089:ssl"));
+        org.junit.Assert.assertFalse(ColumbaLink.sameEndpoint(null));
+    }
+
+    @Test
     public void everyAnnounceResultHasALine() {
         assertEquals("Announced", MeshLines.announce(0));
         assertEquals("Refused: ATAK control off in Columba", MeshLines.announce(2));

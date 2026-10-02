@@ -34,6 +34,9 @@ final class MeshPanel implements ColumbaMeshClient.Listener {
     private final Button announce;
     private final LinearLayout peers;
     private final ColumbaMeshClient client;
+    private final ColumbaLink link;
+    private ColumbaMeshClient.State lastState = ColumbaMeshClient.State.CONNECTING;
+    private MeshSnapshot lastSnapshot;
 
     MeshPanel(Context pluginContext, Context hostContext) {
         this.pluginContext = pluginContext;
@@ -45,6 +48,9 @@ final class MeshPanel implements ColumbaMeshClient.Listener {
         peers = root.findViewById(R.id.peer_list);
         // Bound through ATAK's own context: it is ATAK that Columba sees calling.
         client = new ColumbaMeshClient(hostContext.getApplicationContext(), this);
+        // Redraw when ATAK's connections change: the link line must not wait
+        // for the next mesh change to say the link went down.
+        link = new ColumbaLink(() -> onMesh(lastState, lastSnapshot));
         announce.setOnClickListener(v -> {
             announce.setEnabled(false);
             client.announce(code -> {
@@ -64,10 +70,13 @@ final class MeshPanel implements ColumbaMeshClient.Listener {
 
     void stop() {
         client.stop();
+        link.stop();
     }
 
     @Override
     public void onMesh(ColumbaMeshClient.State state, MeshSnapshot snapshot) {
+        lastState = state;
+        lastSnapshot = snapshot;
         if (state != ColumbaMeshClient.State.CONNECTED || snapshot == null) {
             status.setText(stateLine(state));
             commandPost.setText("");
@@ -77,7 +86,10 @@ final class MeshPanel implements ColumbaMeshClient.Listener {
             return;
         }
         long now = System.currentTimeMillis();
-        status.setText(MeshLines.node(snapshot));
+        // Columba is serving: make sure ATAK is connected to it (ColumbaLink).
+        if (snapshot.node.running && link.ensure())
+            say("Linking ATAK to Columba");
+        status.setText(MeshLines.node(snapshot, ColumbaLink.connected()));
         commandPost.setText(MeshLines.commandPost(snapshot));
         relay.setText(MeshLines.relay(snapshot));
         announce.setEnabled(snapshot.node.running);
