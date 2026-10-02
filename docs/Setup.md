@@ -36,7 +36,53 @@ The other phone and the deck's ATAK stay on the store build.
 
 Responders' phones keep the store ATAK. A release of the plugin goes through
 TAK.gov's third-party pipeline, and the build it returns is signed so that the
-store ATAK loads it: install the plugin, nothing else changes. Two conditions:
-the plugin is built against the SDK for the ATAK version on those phones
-(check each phone's ATAK version against 5.5.1.8), and the pipeline's
+store ATAK loads it: install the plugin, nothing else changes. The pipeline's
 turnaround sets the release cadence, not the bench's.
+
+## Versions: the bench builds against 5.5.1.8, the pipeline against the phones
+
+**Decided 2026-10-02.** 5.5.1.8 is the newest SDK published for download; the
+phones run newer store builds (5.6 and 5.8 at the time of writing). A plugin
+names its target in `ATAK_VERSION` (`build.gradle`), which becomes the
+manifest's `plugin-api` value, `com.atakmap.app@<version>.CIV`.
+
+- **Bench:** `ATAK_VERSION` 5.5.x, built against the local SDK, loaded into the
+  SDK's developer ATAK 5.5.1.8 on the bench phone. A matched pair.
+- **Release:** the third-party pipeline does not use our SDK. Its
+  `atak-gradle-takdev` plugin fetches the SDK for the declared `ATAK_VERSION`
+  from TAK's Maven repository, which holds versions the download page does
+  not. A release sets `ATAK_VERSION` to the ATAK on the phones it is for.
+- **What we cannot check locally:** that repository
+  (`artifacts.tak.gov`) is reserved for US government personnel, so the
+  pipeline's recommended pre-submission build with those credentials is not
+  available to us. Our check is a clean `assembleCivRelease` against the local
+  SDK; a difference between 5.5 and the target version's API shows up only as a
+  failed pipeline build. The plugin keeps to the surfaces that change least
+  (tool pane, map items, chat lines) to make that rare.
+- **Not done:** relabelling a 5.5 build as a later version. Nothing checks the
+  API underneath, and the store ATAK would refuse its signature anyway.
+
+## Pipeline requirements the project keeps from the first commit
+
+From TAK.gov's source archive requirements, so a release never needs a
+restructure:
+
+- Gradle, with the wrapper and scripts at the project root; the
+  `assembleCivRelease` task defined.
+- Every ATAK SDK reference through `atak-gradle-takdev`, version `2.+`.
+- The submission is a zip with a single root folder, whose name becomes the
+  APK name.
+- ProGuard's `-repackageclasses atakplugin.PluginTemplate` replaced with this
+  plugin's own name, so crash logs identify it.
+- The manifest's discovery entry:
+
+  ```xml
+  <activity android:name="com.atakmap.app.component" tools:ignore="MissingClass">
+    <intent-filter android:label="@string/app_name">
+      <action android:name="com.atakmap.app.component" />
+    </intent-filter>
+  </activity>
+  ```
+
+Pipeline-signed plugins carry a visual marker in ATAK showing they came from
+the third-party service rather than TAK's own build pipeline.
