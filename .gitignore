@@ -6,3 +6,5 @@ build/
 local.properties
 .idea/
 *.iml
+app/proguard-gradle-repackage.txt
+.takdev/

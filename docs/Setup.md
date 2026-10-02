@@ -20,8 +20,11 @@
 The developer `atak.apk` is package `com.atakmap.app.civ` -- **the same package
 as the store ATAK-CIV, signed with a different key**. Android will not install
 one over the other: a device moves to the developer ATAK only after the store
-ATAK is uninstalled, which deletes ATAK's local data there (settings, callsign,
-maps, data packages, server certificates). Export what is needed first.
+ATAK is uninstalled. That deletes what ATAK keeps in its private storage --
+preferences, callsign, network and server settings, certificates. What it keeps
+in shared storage (`/sdcard/atak`: data packages, imported maps) survives and is
+found again by the developer ATAK, as it was on the bench phone on 2026-10-02.
+Export the settings that are needed first.
 
 A plugin signed with the SDK's development key loads only in the developer
 ATAK. The store ATAK needs a build from TAK.gov's third-party pipeline
@@ -29,7 +32,8 @@ ATAK. The store ATAK needs a build from TAK.gov's third-party pipeline
 
 **Decided 2026-10-02: the bench device is the spare phone (a Nexus 6P,
 Android 8.1, API 27).** The developer ATAK needs API 21 or later. Its store
-ATAK is exported if needed, uninstalled, and replaced by the SDK's `atak.apk`.
+ATAK was uninstalled and replaced by the SDK's `atak.apk` (5.5.1.8) on
+2026-10-02; the scaffold loaded in it the same day.
 The other phone and the deck's ATAK stay on the store build.
 
 ## Deployment does not need the developer ATAK
@@ -69,11 +73,15 @@ restructure:
 
 - Gradle, with the wrapper and scripts at the project root; the
   `assembleCivRelease` task defined.
-- Every ATAK SDK reference through `atak-gradle-takdev`, version `2.+`.
+- Every ATAK SDK reference through `atak-gradle-takdev`. The requirements page
+  says `2.+`; the 5.5.1.8 template uses `3.+`, and the project follows the
+  template, which is the newer of the two.
 - The submission is a zip with a single root folder, whose name becomes the
   APK name.
 - ProGuard's `-repackageclasses atakplugin.PluginTemplate` replaced with this
-  plugin's own name, so crash logs identify it.
+  plugin's own name, so crash logs identify it. The template's build file
+  writes it from the Gradle project name, so `rootProject.name = "ReticulumAtak"`
+  in `settings.gradle` gives `atakplugin.ReticulumAtak`.
 - The manifest's discovery entry:
 
   ```xml

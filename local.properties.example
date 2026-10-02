@@ -1,0 +1,10 @@
+# Copy to local.properties (ignored by git) and fill in for this machine.
+# No credentials go here: artifacts.tak.gov is not available to us, so the
+# build uses the downloaded SDK (docs/Setup.md).
+
+# The Android SDK.
+sdk.dir=/path/to/android/sdk
+# The ATAK-CIV SDK bundle, unpacked: main.jar, android_keystore, atak.apk.
+sdk.path=/path/to/tak/sdk/5.5.1.8
+# The build plugin shipped inside that bundle.
+takdev.plugin=/path/to/tak/sdk/5.5.1.8/atak-gradle-takdev.jar
