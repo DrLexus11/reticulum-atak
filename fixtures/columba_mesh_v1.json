@@ -14,7 +14,7 @@
           {"uid": "urtn-cccccccccccccccccccccccccccccccc", "callsign": "CHARLIE-3", "role": "Medic", "heard": 1789990000000, "path": false, "hops": null, "carrier": null, "interface": null}
         ]
       },
-      "expect": {"peers": 3, "command_post_reachable": true, "command_post_hops": 2, "propagation_line": "Command post, 2 hops, lora"}
+      "expect": {"peers": 3, "command_post_reachable": true, "command_post_hops": 2, "propagation_line": "Relay: Command post · 2 hops · LoRa", "command_post_line": "Command post: reachable · 2 hops · LoRa"}
     },
     {
       "name": "no-propagation-no-paths",
@@ -27,7 +27,7 @@
           {"uid": "urtn-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "callsign": "HQ", "role": "HQ", "heard": 1789000000000, "path": false, "hops": null, "carrier": null, "interface": null}
         ]
       },
-      "expect": {"peers": 1, "command_post_reachable": false, "command_post_hops": null, "propagation_line": "No propagation node"}
+      "expect": {"peers": 1, "command_post_reachable": false, "command_post_hops": null, "propagation_line": "Relay: none", "command_post_line": "Command post: no path"}
     },
     {
       "name": "nothing-known",
@@ -38,7 +38,7 @@
         "propagation": null,
         "peers": []
       },
-      "expect": {"peers": 0, "command_post_reachable": false, "command_post_hops": null, "propagation_line": "No propagation node"}
+      "expect": {"peers": 0, "command_post_reachable": false, "command_post_hops": null, "propagation_line": "Relay: none", "command_post_line": "Command post: not heard"}
     }
   ]
 }

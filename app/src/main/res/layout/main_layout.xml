@@ -9,13 +9,37 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="6dp">
 
         <TextView
             android:id="@+id/status_line"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="@string/pane_empty" />
+
+        <TextView
+            android:id="@+id/command_post_line"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/relay_line"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/announce_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/pane_empty" />
+            android:text="@string/announce" />
+
+        <LinearLayout
+            android:id="@+id/peer_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
 
     </LinearLayout>
 </ScrollView>
