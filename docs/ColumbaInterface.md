@@ -21,7 +21,9 @@ what the plugin's features need.
 ## The service
 
 - Declared by Columba, `exported="true"`, action
-  `network.columba.app.mesh.BIND`, no permission (a plugin cannot add one to
+  `network.columba.app.mesh.BIND`, no permission. The plugin binds by action
+  with an explicit package, trying `network.columba.app` and then
+  `network.columba.app.debug` (the bench phones run the debug build) (a plugin cannot add one to
   ATAK's manifest; `OpenDecisions.md` 1).
 - Runs in Columba's app process, beside the TAK endpoint that already holds the
   member table and the propagation manager.
@@ -41,7 +43,7 @@ package network.columba.app.mesh;
 import network.columba.app.mesh.IColumbaMeshWatcher;
 
 interface IColumbaMesh {
-    /** 1 for this document. The plugin refuses a version it does not know. */
+    /** 1 for this document; -1 for a refused caller. The plugin refuses a version it does not know. */
     int version();
 
     /** The mesh as this phone sees it: a snapshot, JSON, below. */
@@ -122,11 +124,16 @@ know is `null`, never omitted and never a guess.
 - **The command post** is any peer whose role is `HQ` -- ATAK's own role, set
   on the command post's ATAK, so it needs no configuration of its own. The panel
   shows reachability as "a path to any HQ peer". `propagation.is_command_post`
-  says whether the propagation node in use belongs to one.
-- **`carrier`** is the class of the next-hop interface -- `lora`, `ble`,
-  `wifi`, `tcp`, `udp`, `auto`, `rnode`, `unknown` -- derived from the interface
-  type, not its name, and never from its declared bitrate (`CLAUDE.md`,
-  interface completeness). `interface` is the name as Columba shows it.
+  says whether the propagation node in use belongs to one, and is `null` while
+  Columba cannot tell -- the first implementation always sends `null`, because
+  a command post's propagation node and its TAK node are different identities.
+- **`carrier`** is the class of the next-hop interface, derived from the
+  interface's type -- the class name Reticulum prints before the bracket -- and
+  never from its declared bitrate (`CLAUDE.md`, interface completeness):
+  `lora` (an RNode or KISS modem), `ble`, `tcp` (including backbone), `udp`,
+  `auto`, `local` (a shared instance), `unknown`. There is no `wifi`: an
+  interface's type cannot tell Wi-Fi from any other IP link, so it reports as
+  the IP transport it uses. `interface` is the name as Columba shows it.
 - **`path` / `hops`** come from Columba's path table at the moment of the
   snapshot. `hops` is `null` with no path.
 
