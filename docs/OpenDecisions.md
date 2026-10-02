@@ -25,13 +25,26 @@ signing certificate against a short allow-list -- ATAK-CIV's package
 (`com.atakmap.app.civ`) with TAK's certificate digest, and deliberately added
 entries such as a development build of ATAK. Anything else gets nothing.
 
-**Read-only.** The service exposes state and subscriptions only. Sending,
-deleting and identity operations stay inside Columba.
+**Read, plus a short list of named commands -- amended 2026-10-02.** The
+service exposes state and subscriptions, and these commands only: announce now,
+switch a configured interface on or off, select the propagation node, fetch a
+NomadNet page. A command is refused unless Columba's **"allow ATAK control"**
+setting is on -- set by fleet provisioning, off otherwise -- and every command
+is logged in Columba with its caller. Never through the service: sending as the
+user (messages go through ATAK's GeoChat, as today), deleting, identity
+operations. (First decided read-only; the features agreed the same day need
+the four commands.)
+
+**Guards live in Columba, not in the plugin.** Any plugin loaded in ATAK can
+call the service, so a check in this plugin's UI protects nothing. Columba
+refuses, with its own result code, an interface switch that would leave the
+phone without a path to the command post or without any interface up.
 
 **Accepted cost:** every plugin loaded into an allowed ATAK can reach the
-service, not only this one -- the price of running in ATAK's process. Acceptable
-because the data is read-only and a phone running ATAK already trusts the
-plugins it loaded.
+service, not only this one -- the price of running in ATAK's process. Reading is
+acceptable because a phone running ATAK already trusts the plugins it loaded;
+the commands can disrupt (an interface switched off), which is why they sit
+behind the setting and the log.
 
 Alternatives considered: a local socket (the CoT endpoint or a second one) has
 the same caller problem with weaker means of checking the caller; a content
@@ -81,3 +94,14 @@ the mesh directly through the phone's node. Over the mesh is
 disaster-first (no infrastructure needed) but costs airtime; over IP is cheap
 but absent exactly when it matters. Leaning: over the mesh, rate-limited, with
 IP as a bonus when present.
+
+## 5. Propagation node for ATAK users -- decided 2026-10-02
+
+**Pinned to the command post, with fleet fallback.** The phone uses the command
+post's propagation node by default. When the command post has been unreachable
+for a set time, it falls back to the nearest fleet propagation node -- the
+boards run them and already sync with the command post, so messages meet again
+when the partition heals. The plugin shows which node is in use, in one line,
+state first. A strict pin was rejected as not disaster-first: during a
+partition nothing would be stored off the phone. The fallback delay and how
+"nearest" is measured are set when the feature is built, from measurement.
