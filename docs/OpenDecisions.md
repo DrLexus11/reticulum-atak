@@ -40,21 +40,27 @@ pull request in Columba when the plugin work starts.
 
 ## 2. ATAK-CIV SDK and ATAK version -- open, blocks the scaffold
 
-The SDK must match the ATAK build on the phones (and the deck's Waydroid).
-Checked 2026-10-02:
+The SDK must match the ATAK build it loads into. Checked 2026-10-02:
 
-- **Source: tak.gov**, with a free account; the civilian SDK does not need a
-  government one. It is no longer published on GitHub.
-- **Not** the archived `deptofdefense/AndroidTacticalAssaultKit-CIV` repository
-  (read-only since 2025-05-02, ATAK 4.x era -- too old), and **not** unofficial
-  mirrors of newer SDKs: their provenance and licensing cannot be checked, and
-  this project should not build on binaries it cannot verify.
-- **Signing:** ATAK-CIV loads only plugins signed with the keystore distributed
-  in the SDK -- enough for the bench. A release goes through TAK.gov's
-  third-party pipeline (a source zip submitted at tak.gov/user_builds).
+- **Source: the official `TAK-Product-Center/atak-civ` repository on GitHub**
+  -- public, active, release tags through 5.5.1.10, with `pluginsdk.zip` (Git
+  LFS), the plugin examples and ATAK-CIV's source. tak.gov (a free account)
+  carries the same SDKs and may have versions newer than the repository's tags.
+  Not the archived `deptofdefense/AndroidTacticalAssaultKit-CIV` (read-only
+  since 2025-05-02, ATAK 4.x era), and not unofficial mirrors, whose
+  provenance and licensing cannot be checked.
+- **Signing, two cases.** On the bench: a *developer* ATAK -- the build that
+  ships with the SDK, or one built from the repository and signed with our own
+  key -- loads plugins signed with the matching development key. The *official*
+  ATAK (store builds) uses a different certificate and refuses a locally signed
+  plugin; it needs the build returned by TAK.gov's third-party pipeline (a
+  source zip submitted at tak.gov/user_builds).
+- So the bench phones run a developer ATAK while the plugin is being built, and
+  the official ATAK only once a pipeline build exists. The caller allow-list in
+  decision 1 then lists both ATAK certificates.
 
-Waiting on: the operator's tak.gov account, and the ATAK version on the phones.
-`urban-tak` needs the same; one setup should serve both.
+Waiting on: the ATAK version on the phones, to pick the matching SDK tag.
+`urban-tak` needs the same setup; one serves both.
 
 ## 3. Licence -- open
 

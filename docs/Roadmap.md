@@ -21,7 +21,7 @@ ATAK alone:
 
 1. **Decisions** (`OpenDecisions.md`): how the plugin reads the phone node's
    state -- **decided**: a bound service in Columba behind a caller allow-list;
-   the SDK and ATAK versions -- waiting on a tak.gov account; the licence.
+   the SDK and ATAK versions -- the SDK is on GitHub (`TAK-Product-Center/atak-civ`), waiting on the phones' ATAK version; the licence.
 2. **Mesh telemetry, in the firmware repository** (PR F's first half, already
    planned there): the board-side report and its codec, a gateway to MQTT, and
    the backend. The plugin's mesh-health view reads the same data.
