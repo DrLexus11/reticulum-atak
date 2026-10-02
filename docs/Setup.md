@@ -66,6 +66,33 @@ manifest's `plugin-api` value, `com.atakmap.app@<version>.CIV`.
 - **Not done:** relabelling a 5.5 build as a later version. Nothing checks the
   API underneath, and the store ATAK would refuse its signature anyway.
 
+## A pipeline release, as first done (2026-10-02)
+
+The scaffold, unchanged except `ATAK_VERSION = "5.8.0"`, submitted as a zip.
+
+- **Nothing is asked at upload.** The pipeline reads the target from
+  `ATAK_VERSION` in `app/build.gradle`; to target another ATAK, change that
+  line and submit again. One zip, one target.
+- **It builds against the real target.** The build log shows the SDK API,
+  ProGuard mapping and signing material resolved from TAK's repository for
+  `5.8.0` (`5.8.0-SNAPSHOT` to `5.8.1-SNAPSHOT`) -- newer than any SDK published
+  for download.
+- **About half an hour.** Queued, then 26 minutes, of which the Gradle build
+  was 2; the rest is a Fortify scan, a dependency check and an SBOM. An email
+  reports the status.
+- **What comes back:** the release APK and AAB, the ProGuard mapping, the
+  build log, Fortify results, a dependency-check report and an SBOM
+  (CycloneDX JSON and XML). None of it goes in this repository.
+- **The signature:** `CN=TAK Product Center ATAK Untrusted Plugin Release` --
+  TAK's third-party key, not ours and not TAK's own plugin key.
+- **Version code 1.** A zip carries no git history, so the template's
+  git-derived version name is empty and the code falls back to 1. A release
+  needs `takStaticVersion` (or another explicit code) so ATAK sees upgrades.
+- **It loads in the store ATAK.** Installed with `adb install -r` on the deck's
+  ATAK-CIV 5.8.0.4 (official signature, Waydroid, x86_64), loaded from the
+  plugin list, and its pane opened. The whole release path works: source zip,
+  pipeline, store ATAK -- no developer ATAK on the phone.
+
 ## Pipeline requirements the project keeps from the first commit
 
 From TAK.gov's source archive requirements, so a release never needs a
