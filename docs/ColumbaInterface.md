@@ -21,8 +21,10 @@ what the plugin's features need.
 ## The service
 
 - Declared by Columba, `exported="true"`, action
-  `network.columba.app.mesh.BIND`, no permission (a plugin cannot add one to
-  ATAK's manifest; `OpenDecisions.md` 1).
+  `network.columba.app.mesh.BIND`, and no permission: a plugin cannot add one
+  to ATAK's manifest (`OpenDecisions.md` 1).
+- The plugin binds by action with an explicit package: `network.columba.app`
+  first, then `network.columba.app.debug`, which the bench phones run.
 - Runs in Columba's app process, beside the TAK endpoint that already holds the
   member table and the propagation manager.
 - **Every call checks its caller.** `Binder.getCallingUid()` gives the
@@ -41,7 +43,7 @@ package network.columba.app.mesh;
 import network.columba.app.mesh.IColumbaMeshWatcher;
 
 interface IColumbaMesh {
-    /** 1 for this document. The plugin refuses a version it does not know. */
+    /** 1 for this document; -1 for a refused caller. The plugin refuses a version it does not know. */
     int version();
 
     /** The mesh as this phone sees it: a snapshot, JSON, below. */
@@ -97,7 +99,7 @@ know is `null`, never omitted and never a guess.
     "path": true,
     "hops": 2,
     "carrier": "lora",
-    "is_command_post": true,
+    "is_command_post": null,
     "last_sync": 1789999990000
   },
   "peers": [
@@ -122,11 +124,16 @@ know is `null`, never omitted and never a guess.
 - **The command post** is any peer whose role is `HQ` -- ATAK's own role, set
   on the command post's ATAK, so it needs no configuration of its own. The panel
   shows reachability as "a path to any HQ peer". `propagation.is_command_post`
-  says whether the propagation node in use belongs to one.
-- **`carrier`** is the class of the next-hop interface -- `lora`, `ble`,
-  `wifi`, `tcp`, `udp`, `auto`, `rnode`, `unknown` -- derived from the interface
-  type, not its name, and never from its declared bitrate (`CLAUDE.md`,
-  interface completeness). `interface` is the name as Columba shows it.
+  says whether the propagation node in use belongs to one, and is `null` while
+  Columba cannot tell -- the first implementation always sends `null`, because
+  a command post's propagation node and its TAK node are different identities.
+- **`carrier`** is the class of the next-hop interface, derived from the
+  interface's type -- the class name Reticulum prints before the bracket -- and
+  never from its declared bitrate (`CLAUDE.md`, interface completeness):
+  `lora` (an RNode or KISS modem), `ble`, `tcp` (including backbone), `udp`,
+  `auto`, `local` (a shared instance), `unknown`. There is no `wifi`: an
+  interface's type cannot tell Wi-Fi from any other IP link, so it reports as
+  the IP transport it uses. `interface` is the name as Columba shows it.
 - **`path` / `hops`** come from Columba's path table at the moment of the
   snapshot. `hops` is `null` with no path.
 
@@ -134,9 +141,13 @@ know is `null`, never omitted and never a guess.
 
 `fixtures/columba_mesh_v1.json` (in both repositories): snapshots that both
 sides must parse to the same values -- a full one, one with no propagation node
-and no paths, one with every optional field `null`. Columba's tests build each
-from a fake member table and path table and compare; the plugin's tests parse
-each and check what the panel would show.
+and no paths, one with every optional field `null`. Columba parses each and
+writes it back unchanged, so it can neither drop a field nor turn a `null`
+into a value; the plugin parses each and checks the lines in its `expect`
+block. The full snapshot carries `is_command_post: true` although Columba sends
+`null` today: the fixture covers what a version 1 snapshot may hold, not what
+the first implementation happens to produce. The `expect` block is the plugin's
+-- the lines the panel shows for each snapshot.
 
 ## Order
 
