@@ -27,6 +27,16 @@ A plugin signed with the SDK's development key loads only in the developer
 ATAK. The store ATAK needs a build from TAK.gov's third-party pipeline
 (`OpenDecisions.md`, 2).
 
-Which device becomes the bench is the operator's call (pending): a spare phone
-is cleanest; otherwise one bench phone after exporting its ATAK setup, keeping
-the other phone and the deck's ATAK as they are.
+**Decided 2026-10-02: the bench device is the spare phone (a Nexus 6P,
+Android 8.1, API 27).** The developer ATAK needs API 21 or later. Its store
+ATAK is exported if needed, uninstalled, and replaced by the SDK's `atak.apk`.
+The other phone and the deck's ATAK stay on the store build.
+
+## Deployment does not need the developer ATAK
+
+Responders' phones keep the store ATAK. A release of the plugin goes through
+TAK.gov's third-party pipeline, and the build it returns is signed so that the
+store ATAK loads it: install the plugin, nothing else changes. Two conditions:
+the plugin is built against the SDK for the ATAK version on those phones
+(check each phone's ATAK version against 5.5.1.8), and the pipeline's
+turnaround sets the release cadence, not the bench's.
