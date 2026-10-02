@@ -45,6 +45,9 @@ public class ReticulumAtakPlugin implements IPlugin {
                         pluginContext.getResources().getDrawable(R.drawable.ic_launcher),
                         android.graphics.drawable.Drawable.class,
                         gov.tak.api.commons.graphics.Bitmap.class))
+                // stable across restarts, so a toolbar the user rearranged
+                // finds this button again
+                .setIdentifier(pluginContext.getPackageName())
                 .setListener(new ToolbarItemAdapter() {
                     @Override
                     public void onClick(ToolbarItem item) {

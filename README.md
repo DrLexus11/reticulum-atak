@@ -40,7 +40,12 @@ Against the downloaded ATAK-CIV SDK, without TAK's artifact server
 ./gradlew assembleCivRelease   # what TAK.gov's third-party pipeline builds
 ```
 
-The debug build loads only in the developer ATAK that ships with the SDK.
+Both build here and both are signed with the SDK's development key, so both
+load only in the developer ATAK that ships with the SDK. The local release
+build is a check that the release configuration compiles and passes TAK's lint;
+it is obfuscated against the development ATAK, not the store one (the
+downloaded SDK has no store ProGuard mapping). The release that ships is the
+pipeline's build.
 `adb install -r app/build/outputs/apk/civ/debug/*.apk`, then load it from
 ATAK's plugin list.
 
