@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Reticulum</string>
+    <string name="app_desc">Mesh delivery state, queues and reachability from the phone\'s Reticulum node.</string>
+    <string name="pane_empty">No mesh state yet.</string>
+</resources>

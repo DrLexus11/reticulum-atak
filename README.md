@@ -31,10 +31,23 @@ Scaffolding. See `docs/Roadmap.md` for the order of work and
 
 ## Building
 
-Not yet. An ATAK plugin builds against the ATAK-CIV SDK, which TAK.gov
-distributes to registered developers rather than through a public package
-repository. `docs/Setup.md` covers the SDK, the bench device, and which ATAK
-version the bench and releases each build against.
+Against the downloaded ATAK-CIV SDK, without TAK's artifact server
+(`docs/Setup.md` covers the SDK and why). Copy `local.properties.example` to
+`local.properties`, point it at the Android SDK and the ATAK-CIV SDK, then:
+
+```
+./gradlew assembleCivDebug     # the bench build, signed with the SDK's development key
+./gradlew assembleCivRelease   # what TAK.gov's third-party pipeline builds
+```
+
+Both build here and both are signed with the SDK's development key, so both
+load only in the developer ATAK that ships with the SDK. The local release
+build is a check that the release configuration compiles and passes TAK's lint;
+it is obfuscated against the development ATAK, not the store one (the
+downloaded SDK has no store ProGuard mapping). The release that ships is the
+pipeline's build.
+`adb install -r app/build/outputs/apk/civ/debug/*.apk`, then load it from
+ATAK's plugin list.
 
 ## Contributing
 
