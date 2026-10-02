@@ -98,6 +98,8 @@ android {
 
     buildFeatures {
         buildConfig = true
+        // Columba's mesh interface (app/src/main/aidl, docs/ColumbaInterface.md).
+        aidl = true
     }
 
     compileOptions {
@@ -210,6 +212,9 @@ android {
         // conflict with src/ being used by the main source set.
         // Adding new build types or product flavors should be accompanied
         // by a similar customization.
+        // The shared fixtures, read by the unit tests in place -- never copied.
+        test.resources.srcDirs += ['../fixtures']
+
         debug.setRoot('build-types/debug')
         release.setRoot('build-types/release')
 
@@ -273,6 +278,9 @@ def getCommandFlavor() {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: '*.jar')
+    testImplementation 'junit:junit:4.13.2'
+    // Android's org.json is a stub off the device; the tests need the real one.
+    testImplementation 'org.json:json:20231013'
 }
 
 configurations.all {

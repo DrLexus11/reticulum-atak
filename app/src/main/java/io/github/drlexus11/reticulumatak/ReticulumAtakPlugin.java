@@ -3,7 +3,7 @@ package io.github.drlexus11.reticulumatak;
 import android.content.Context;
 
 import com.atak.plugins.impl.PluginContextProvider;
-import com.atak.plugins.impl.PluginLayoutInflater;
+import com.atakmap.android.maps.MapView;
 
 import gov.tak.api.plugin.IPlugin;
 import gov.tak.api.plugin.IServiceController;
@@ -15,9 +15,9 @@ import gov.tak.api.ui.ToolbarItemAdapter;
 import gov.tak.platform.marshal.MarshalManager;
 
 /**
- * The plugin's entry point: a toolbar button that opens one pane. The pane is
- * empty until the plugin reads the phone node's state (docs/Roadmap.md, step 4
- * onward).
+ * The plugin's entry point: a toolbar button that opens the mesh panel
+ * ([MeshPanel]), which reads the phone's node through Columba's mesh interface
+ * (docs/ColumbaInterface.md).
  */
 public class ReticulumAtakPlugin implements IPlugin {
 
@@ -26,6 +26,7 @@ public class ReticulumAtakPlugin implements IPlugin {
     private final IHostUIService uiService;
     private ToolbarItem toolbarItem;
     private Pane pane;
+    private MeshPanel panel;
 
     public ReticulumAtakPlugin(IServiceController serviceController) {
         this.serviceController = serviceController;
@@ -66,6 +67,11 @@ public class ReticulumAtakPlugin implements IPlugin {
 
     @Override
     public void onStop() {
+        if (panel != null) {
+            panel.stop();
+            panel = null;
+            pane = null;
+        }
         if (uiService == null || toolbarItem == null)
             return;
         uiService.removeToolbarItem(toolbarItem);
@@ -73,8 +79,10 @@ public class ReticulumAtakPlugin implements IPlugin {
 
     private void showPane() {
         if (pane == null) {
-            pane = new PaneBuilder(PluginLayoutInflater.inflate(pluginContext,
-                    R.layout.main_layout, null))
+            MapView map = MapView.getMapView();
+            panel = new MeshPanel(pluginContext, map != null ? map.getContext() : pluginContext);
+            panel.start();
+            pane = new PaneBuilder(panel.view())
                     .setMetaValue(Pane.RELATIVE_LOCATION, Pane.Location.Default)
                     .setMetaValue(Pane.PREFERRED_WIDTH_RATIO, 0.5D)
                     .setMetaValue(Pane.PREFERRED_HEIGHT_RATIO, 0.5D)
