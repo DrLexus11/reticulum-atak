@@ -21,9 +21,21 @@ exposed to other apps, so it is a security decision as much as a plumbing one.
 
 ## 2. ATAK-CIV SDK and ATAK version -- open, blocks the scaffold
 
-The SDK comes from TAK.gov to a registered developer and must match the ATAK
-build on the phones. Needed: the SDK, the ATAK version it targets, and a
-plugin-signing setup. `urban-tak` needs the same; one setup should serve both.
+The SDK must match the ATAK build on the phones (and the deck's Waydroid).
+Checked 2026-10-02:
+
+- **Source: tak.gov**, with a free account; the civilian SDK does not need a
+  government one. It is no longer published on GitHub.
+- **Not** the archived `deptofdefense/AndroidTacticalAssaultKit-CIV` repository
+  (read-only since 2025-05-02, ATAK 4.x era -- too old), and **not** unofficial
+  mirrors of newer SDKs: their provenance and licensing cannot be checked, and
+  this project should not build on binaries it cannot verify.
+- **Signing:** ATAK-CIV loads only plugins signed with the keystore distributed
+  in the SDK -- enough for the bench. A release goes through TAK.gov's
+  third-party pipeline (a source zip submitted at tak.gov/user_builds).
+
+Waiting on: the operator's tak.gov account, and the ATAK version on the phones.
+`urban-tak` needs the same; one setup should serve both.
 
 ## 3. Licence -- open
 
