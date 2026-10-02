@@ -20,8 +20,8 @@ ATAK alone:
 ## Order of work
 
 1. **Decisions** (`OpenDecisions.md`): how the plugin reads the phone node's
-   state, the SDK and ATAK versions, the licence. Nothing is built until the
-   first two are settled.
+   state -- **decided**: a bound service in Columba behind a caller allow-list;
+   the SDK and ATAK versions -- waiting on a tak.gov account; the licence.
 2. **Mesh telemetry, in the firmware repository** (PR F's first half, already
    planned there): the board-side report and its codec, a gateway to MQTT, and
    the backend. The plugin's mesh-health view reads the same data.
