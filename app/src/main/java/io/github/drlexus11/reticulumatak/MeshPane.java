@@ -96,8 +96,11 @@ final class MeshPane implements MeshSession.View {
         markTab(pager.getCurrentItem());
     }
 
+    /** The current tab is selected -- for screen readers too -- and the other dimmed. */
     private void markTab(int position) {
+        tabMesh.setSelected(position == 0);
         tabMesh.setAlpha(position == 0 ? 1f : 0.45f);
+        tabInterfaces.setSelected(position == 1);
         tabInterfaces.setAlpha(position == 1 ? 1f : 0.45f);
     }
 

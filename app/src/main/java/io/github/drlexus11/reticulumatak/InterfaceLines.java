@@ -49,10 +49,14 @@ public final class InterfaceLines {
             line.append(" · up");
             if (f.carriesCommandPost)
                 line.append(" · carries command post");
+        } else if (staged) {
+            // Not running because it is not applied yet: the pending state is
+            // what the operator needs, whatever the stack last said about it.
+            line.append(" · on (pending)");
         } else if (f.reason != null) {
             line.append(" · down: ").append(f.reason);
         } else {
-            line.append(staged ? " · on (pending)" : " · down");
+            line.append(" · down");
         }
         return line.toString();
     }

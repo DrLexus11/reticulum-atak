@@ -5,8 +5,7 @@
     android:layout_height="wrap_content"
     android:minHeight="52dp"
     android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:descendantFocusability="blocksDescendants">
+    android:gravity="center_vertical">
 
     <View
         android:id="@+id/iface_dot"

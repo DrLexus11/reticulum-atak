@@ -179,6 +179,8 @@ final class InterfacesPage implements MeshSession.View {
             dot.setColor(color(f, live));
 
             Switch toggle = row.findViewById(R.id.iface_switch);
+            // Its own label, for screen readers: the row's text is not tied to it.
+            toggle.setContentDescription(f.name);
             // Unhooked while set from the snapshot: only a hand on it is a request.
             toggle.setOnCheckedChangeListener(null);
             Accepted a = accepted.get(f.id);

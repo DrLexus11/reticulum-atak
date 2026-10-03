@@ -4,8 +4,10 @@ The contract between Columba (the phone's Reticulum node) and this plugin.
 Columba owns it and serves it; the plugin is a client. Both repositories carry
 the same AIDL file and the same snapshot fixture, and both test against the
 fixture -- the discipline the firmware and Columba already keep for
-`tak_native_v1.json`. A change to either is a version bump, made in both
-repositories in the same week.
+`tak_native_v1.json`. A **breaking** change to either is a version bump, made
+in both repositories in the same week; an **additive** one -- optional snapshot
+fields, methods appended behind a capability bit -- keeps version 1 (see
+"Interfaces: an additive capability" below).
 
 Decisions behind it: `OpenDecisions.md` 1 (a bound service, a caller
 allow-list, read plus named commands behind a setting) and 5 (propagation node).
@@ -66,10 +68,12 @@ Result codes: `0 OK`, `1 ERR_CALLER` (not on the allow-list), `2 ERR_CONTROL_OFF
 (Columba's "allow ATAK control" is off), `3 ERR_NOT_READY` (Reticulum not
 running), `4 ERR_RATE_LIMITED`.
 
-Commands added after PR F -- switch an interface, select the propagation node,
-fetch a NomadNet page -- arrive as version 2, with their own codes. The
-interface switch carries its guard in Columba: a switch that would leave no
-path to the command post, or no interface up, is refused there.
+Later commands arrive as additive capabilities, with their own codes: the
+interface switch is the first, in PR F (moved in on 2026-10-03; see
+"Interfaces: an additive capability" below), and selecting the propagation
+node and fetching a NomadNet page follow after PR F. The interface switch
+carries its guard in Columba: a switch that would leave no path to the command
+post, or no interface up, is refused there.
 
 **Announce is rate-limited, and not out of politeness.** Reticulum relays block
 a destination that announces faster than their rate allowance, which costs the

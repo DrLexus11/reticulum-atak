@@ -60,6 +60,17 @@ public class InterfaceLinesTest {
     }
 
     @Test
+    public void aStagedInterfaceReadsPendingEvenWithAReason() throws Exception {
+        JSONObject snapshot = cases().getJSONObject(0).getJSONObject("snapshot");
+        JSONObject ble = snapshot.getJSONArray("interfaces").getJSONObject(1); // "BLE peer", down: Bluetooth is off
+        ble.put("pending", true);
+        MeshSnapshot s = MeshSnapshot.parse(snapshot.toString());
+        assertEquals("BLE peer · BLE · on (pending)", InterfaceLines.row(s.interfaces.get(1), false));
+        // Where switches are live nothing is staged: the reason shows.
+        assertEquals("BLE peer · BLE · down: Bluetooth is off", InterfaceLines.row(s.interfaces.get(1), true));
+    }
+
+    @Test
     public void aSnapshotWithoutInterfacesHasNone() throws Exception {
         try (InputStream in = InterfaceLinesTest.class.getClassLoader().getResourceAsStream("columba_mesh_v1.json");
                 Scanner scanner = new Scanner(in, StandardCharsets.UTF_8.name())) {
