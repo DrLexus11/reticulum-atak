@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A peer's reachability dot; its colour is set at runtime (PeerStatus). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="#FF8A8A8A" />
+    <size android:width="14dp" android:height="14dp" />
+</shape>
