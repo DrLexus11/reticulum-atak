@@ -91,3 +91,13 @@ pane has no fragment manager of its own. With one page (a Columba without the
 interfaces capability), there are no tabs. Page 1 is **Mesh** (status, peers,
 announce, the overlay's controls); page 2 is **Interfaces**. Later features
 take further pages rather than crowding the first.
+
+## The overlay -- next
+
+Accepted for PR F as it is (operator, 2026-10-03), with two improvements for
+later:
+
+- **Pagination**: with more favourites than fit, pages of rows rather than a
+  column that runs off the map.
+- **A small Announce button** on the overlay, so announcing does not need the
+  panel open.
