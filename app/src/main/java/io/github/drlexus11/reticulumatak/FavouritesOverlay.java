@@ -18,7 +18,8 @@ import java.util.Set;
 
 /**
  * The favourite peers as a squad indicator over the map: a header, then one
- * row each, coloured by mesh reachability (PeerStatus), with name and hops.
+ * row each, coloured by mesh reachability (PeerStatus) and shaped by it too --
+ * ● reachable, ◐ stale, ○ unreachable -- so it reads without colour.
  *
  * - Tap a row: the map centres on that peer. Long-press: GeoChat with them. A
  *   stray tap therefore only moves the map; it never opens the wrong chat.
@@ -105,8 +106,9 @@ final class FavouritesOverlay {
         for (int i = 0; i < shown.size(); i++) {
             MeshSnapshot.Peer peer = shown.get(i);
             TextWidget row = rows.get(i);
-            String text = "\u25CF " + PeerStatus.overlayLine(peer);
-            int color = PeerStatus.color(PeerStatus.of(peer, now));
+            PeerStatus.Level level = PeerStatus.of(peer, now);
+            String text = PeerStatus.glyph(level) + " " + PeerStatus.overlayLine(peer);
+            int color = PeerStatus.color(level);
             if (!text.equals(row.getText()))
                 row.setText(text);
             if (color != rowColors.get(i)) {
@@ -132,8 +134,9 @@ final class FavouritesOverlay {
         column.addWidget(header(format, pad));
         for (MeshSnapshot.Peer peer : shown) {
             final int index = rows.size();
-            int color = PeerStatus.color(PeerStatus.of(peer, now));
-            TextWidget row = new TextWidget("\u25CF " + PeerStatus.overlayLine(peer), format);
+            PeerStatus.Level level = PeerStatus.of(peer, now);
+            int color = PeerStatus.color(level);
+            TextWidget row = new TextWidget(PeerStatus.glyph(level) + " " + PeerStatus.overlayLine(peer), format);
             row.setColor(color);
             row.setBackground(BACKING);
             row.setPadding(pad, pad, pad * 1.5f, pad);

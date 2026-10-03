@@ -3,6 +3,8 @@ package io.github.drlexus11.reticulumatak;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.atakmap.android.chat.ChatManagerMapComponent;
 import com.atakmap.android.ipc.AtakBroadcast;
@@ -37,6 +39,14 @@ final class MeshSession implements ColumbaMeshClient.Listener, Favourites.Listen
     private MeshSnapshot snapshot;
     /** Set when the panel opened a chat; the chat's close then reopens the panel. */
     private boolean chatFromPanel;
+    /** Redraws when the next peer's freshness runs out (PeerStatus.nextChange). */
+    private final Handler main = new Handler(Looper.getMainLooper());
+    private final Runnable freshnessTick = new Runnable() {
+        @Override
+        public void run() {
+            publish();
+        }
+    };
 
     private final BroadcastReceiver chatClosed = new BroadcastReceiver() {
         @Override
@@ -53,11 +63,13 @@ final class MeshSession implements ColumbaMeshClient.Listener, Favourites.Listen
         this.opener = opener;
         // Bound through ATAK's own context: it is ATAK that Columba sees calling.
         client = new ColumbaMeshClient(hostContext.getApplicationContext(), this);
-        // Redraw when ATAK's connections change: the link line must not wait
-        // for the next mesh change to say the link went down.
+        // When ATAK's connections change: put the link back if it was removed
+        // -- not on the next mesh change, which may be a long time coming --
+        // and redraw, so the link line says what happened.
         link = new ColumbaLink(new ColumbaLink.Listener() {
             @Override
             public void onLinkChanged() {
+                ensureLink();
                 publish();
             }
         });
@@ -75,6 +87,7 @@ final class MeshSession implements ColumbaMeshClient.Listener, Favourites.Listen
     }
 
     void stop() {
+        main.removeCallbacks(freshnessTick);
         AtakBroadcast.getInstance().unregisterReceiver(chatClosed);
         favourites.removeListener(this);
         overlay.dispose();
@@ -131,10 +144,14 @@ final class MeshSession implements ColumbaMeshClient.Listener, Favourites.Listen
     public void onMesh(ColumbaMeshClient.State state, MeshSnapshot snapshot) {
         this.state = state;
         this.snapshot = state == ColumbaMeshClient.State.CONNECTED ? snapshot : null;
-        // Columba is serving: make sure ATAK is connected to it (ColumbaLink).
-        if (this.snapshot != null && this.snapshot.node.running && link.ensure())
-            PeerActions.say(pluginContext, "Linking ATAK to Columba");
+        ensureLink();
         publish();
+    }
+
+    /** Columba is serving: make sure ATAK is connected to it (ColumbaLink). */
+    private void ensureLink() {
+        if (snapshot != null && snapshot.node.running && link.ensure())
+            PeerActions.say(pluginContext, "Linking ATAK to Columba");
     }
 
     @Override
@@ -146,5 +163,11 @@ final class MeshSession implements ColumbaMeshClient.Listener, Favourites.Listen
         overlay.update(snapshot);
         for (View view : views)
             view.onMesh(state, snapshot);
+        // A peer goes stale with time alone: redraw when the next one does,
+        // even if no snapshot arrives meanwhile.
+        main.removeCallbacks(freshnessTick);
+        long next = snapshot != null ? PeerStatus.nextChange(snapshot.peers, System.currentTimeMillis()) : -1;
+        if (next >= 0)
+            main.postDelayed(freshnessTick, next + 1000);
     }
 }

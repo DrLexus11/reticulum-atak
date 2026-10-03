@@ -77,12 +77,18 @@ final class MeshPanel implements MeshSession.View {
         });
     }
 
-    /** The chosen size reads as selected; the others dimmed. */
+    /** The chosen size is selected -- for screen readers too -- and the others dimmed. */
     private void markSize() {
         OverlaySettings.Size current = session.overlaySize();
-        root.findViewById(R.id.overlay_small).setAlpha(current == OverlaySettings.Size.SMALL ? 1f : 0.45f);
-        root.findViewById(R.id.overlay_medium).setAlpha(current == OverlaySettings.Size.MEDIUM ? 1f : 0.45f);
-        root.findViewById(R.id.overlay_large).setAlpha(current == OverlaySettings.Size.LARGE ? 1f : 0.45f);
+        mark(root.findViewById(R.id.overlay_small), current == OverlaySettings.Size.SMALL);
+        mark(root.findViewById(R.id.overlay_medium), current == OverlaySettings.Size.MEDIUM);
+        mark(root.findViewById(R.id.overlay_large), current == OverlaySettings.Size.LARGE);
+    }
+
+    /** Selected and lit, or not selected and dimmed: state that accessibility services read. */
+    private static void mark(View view, boolean on) {
+        view.setSelected(on);
+        view.setAlpha(on ? 1f : 0.45f);
     }
 
     @Override
@@ -207,8 +213,11 @@ final class MeshPanel implements MeshSession.View {
 
             ImageButton star = row.findViewById(R.id.peer_favourite);
             star.setImageDrawable(atakIcon(com.atakmap.app.R.drawable.lpt_white_star_drawable));
-            // Lit when chosen, dimmed when not: the same icon, as ATAK does.
-            star.setAlpha(favourites.contains(peer.uid) ? 1f : 0.3f);
+            // Lit when chosen, dimmed when not: the same icon, as ATAK does --
+            // and selected, which screen readers announce.
+            boolean favourite = favourites.contains(peer.uid);
+            star.setSelected(favourite);
+            star.setAlpha(favourite ? 1f : 0.3f);
             star.setOnClickListener(v -> session.favourites().toggle(peer.uid));
 
             ImageButton locate = row.findViewById(R.id.peer_locate);
