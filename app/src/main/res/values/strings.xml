@@ -13,4 +13,11 @@
     <string name="size_medium">M</string>
     <string name="size_large">L</string>
     <string name="overlay_reset">Reset place</string>
+    <string name="tab_mesh">Mesh</string>
+    <string name="tab_interfaces">Interfaces</string>
+    <string name="iface_control_off">ATAK control off in Columba: view only</string>
+    <string name="iface_apply">Apply</string>
+    <string name="iface_apply_title">Apply interface changes?</string>
+    <string name="iface_apply_message">Restarts the mesh on this phone (about 5 s); links drop and rebuild.</string>
+    <string name="cancel">Cancel</string>
 </resources>

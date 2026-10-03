@@ -18,7 +18,7 @@ import gov.tak.platform.marshal.MarshalManager;
  * The plugin's entry point. On start it opens the mesh session (MeshSession:
  * Columba's mesh interface, ATAK's link to Columba, favourites and their map
  * overlay), which runs as long as the plugin does; the toolbar button opens the
- * mesh panel (MeshPanel), a view on that session.
+ * pane (MeshPane: the mesh, and Columba's interfaces), a view on that session.
  */
 public class ReticulumAtakPlugin implements IPlugin {
 
@@ -27,7 +27,7 @@ public class ReticulumAtakPlugin implements IPlugin {
     private final IHostUIService uiService;
     private ToolbarItem toolbarItem;
     private Pane pane;
-    private MeshPanel panel;
+    private MeshPane panel;
     private MeshSession session;
 
     public ReticulumAtakPlugin(IServiceController serviceController) {
@@ -77,7 +77,7 @@ public class ReticulumAtakPlugin implements IPlugin {
     public void onStop() {
         if (session != null) {
             if (panel != null)
-                session.removeView(panel);
+                panel.detach();
             session.stop();
             session = null;
         }
@@ -92,8 +92,8 @@ public class ReticulumAtakPlugin implements IPlugin {
         if (session == null)
             return;
         if (pane == null) {
-            panel = new MeshPanel(pluginContext, session);
-            session.addView(panel);
+            panel = new MeshPane(pluginContext, session);
+            panel.attach();
             pane = new PaneBuilder(panel.view())
                     .setMetaValue(Pane.RELATIVE_LOCATION, Pane.Location.Default)
                     .setMetaValue(Pane.PREFERRED_WIDTH_RATIO, 0.5D)

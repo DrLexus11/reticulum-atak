@@ -82,8 +82,12 @@ Each step is tested on the bench phones before it merges.
 ## Pages
 
 The plugin's window grows by **swipeable pages**, the structure ATAK uses for
-marker details: an androidx `ViewPager` (ATAK ships it, so the plugin bundles
-nothing), a title naming the current page, and page-indicator dots -- TAK's own
-sample is `helloworld`'s `TabViewDropDown`. Page 1 is **Mesh** (status, peers,
+marker details: an androidx `ViewPager` (ATAK ships it and keeps `androidx.**`
+unobfuscated, so the plugin bundles nothing) under a row of tabs, one per page
+-- swipe or tap. Tabs rather than the sample's dots, because a page reachable
+only by swiping is one nobody finds. TAK's own sample is `helloworld`'s
+`TabViewDropDown`; the plugin uses views rather than its fragments, because a
+pane has no fragment manager of its own. With one page (a Columba without the
+interfaces capability), there are no tabs. Page 1 is **Mesh** (status, peers,
 announce, the overlay's controls); page 2 is **Interfaces**. Later features
 take further pages rather than crowding the first.

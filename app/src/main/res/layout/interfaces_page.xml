@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Columba's configured interfaces, one switch each, for quick diagnosis from
+     ATAK. A fixed header says how switches apply here; Apply appears only on a
+     staging backend with changes waiting. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="6dp">
+
+    <TextView
+        android:id="@+id/iface_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:text="@string/pane_empty" />
+
+    <TextView
+        android:id="@+id/iface_control"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFB000"
+        android:text="@string/iface_control_off"
+        android:visibility="gone" />
+
+    <ListView
+        android:id="@+id/iface_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="4dp"
+        android:fadeScrollbars="false" />
+
+    <Button
+        android:id="@+id/iface_apply"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:text="@string/iface_apply"
+        android:visibility="gone" />
+</LinearLayout>

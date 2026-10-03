@@ -172,6 +172,15 @@ cut off every installed plugin. Instead:
 - A new `capabilities()` says what the service offers. Against a Columba that
   predates it, the call has no implementation and returns 0, so a newer plugin
   sees no capabilities and simply hides the Interfaces page.
+- **The capability bit is the only trustworthy answer.** An older Columba's
+  binder does not know the new transaction codes: it answers with an empty
+  reply, and the generated proxy reads an empty reply as "no exception, 0".
+  That is why `capabilities()` comes back 0. But it also means
+  `setInterfaceEnabled` and `applyInterfaces` would come back 0, which is `OK`,
+  for a switch that was never heard. The plugin therefore checks the bit before
+  every such call and reports "this Columba cannot switch interfaces" without
+  asking (`ColumbaMeshClient.command`). Every future appended method gets the
+  same gate.
 
 A **breaking** change -- a field changing meaning, a method changing signature
 -- is what bumps `version()`; the plugin refuses a version it does not know.
