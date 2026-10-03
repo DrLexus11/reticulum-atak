@@ -54,4 +54,23 @@ public class PeerStatusTest {
         assertEquals("BRAVO-2  1 hop", PeerStatus.overlayLine(s.peers.get(1)));
         assertEquals("CHARLIE-3  no path", PeerStatus.overlayLine(s.peers.get(2)));
     }
+
+    @Test
+    public void eachLevelHasItsOwnShape() {
+        Set<String> shapes = new HashSet<>();
+        for (PeerStatus.Level level : PeerStatus.Level.values())
+            shapes.add(PeerStatus.glyph(level));
+        assertEquals(PeerStatus.Level.values().length, shapes.size());
+    }
+
+    @Test
+    public void theNextChangeIsTheNextPeerToGoQuiet() throws Exception {
+        MeshSnapshot s = full();
+        // HQ heard 50 s before the snapshot, BRAVO-2 100 s, CHARLIE-3 long ago:
+        // BRAVO-2 goes quiet first, HQ 50 s later.
+        assertEquals(PeerStatus.FRESH_MS - 100_000, PeerStatus.nextChange(s.peers, s.at));
+        long afterBravo = s.at + PeerStatus.FRESH_MS - 100_000 + 1;
+        assertEquals(49_999, PeerStatus.nextChange(s.peers, afterBravo));
+        assertEquals(-1, PeerStatus.nextChange(s.peers, s.at + PeerStatus.FRESH_MS));
+    }
 }

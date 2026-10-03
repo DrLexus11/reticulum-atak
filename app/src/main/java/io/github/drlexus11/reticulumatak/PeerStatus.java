@@ -52,6 +52,36 @@ public final class PeerStatus {
     }
 
     /**
+     * The level as a shape -- full, half, empty -- so the overlay reads without
+     * colour: green and amber look alike to a colour-blind operator.
+     */
+    public static String glyph(Level level) {
+        switch (level) {
+            case REACHABLE:
+                return "\u25CF"; // ●
+            case STALE:
+                return "\u25D0"; // ◐
+            default:
+                return "\u25CB"; // ○
+        }
+    }
+
+    /**
+     * Milliseconds until the next peer's freshness runs out, or -1 when none
+     * will: a level changes with time alone, so the views are redrawn then,
+     * not only when a snapshot arrives.
+     */
+    public static long nextChange(List<MeshSnapshot.Peer> peers, long now) {
+        long next = -1;
+        for (MeshSnapshot.Peer peer : peers) {
+            long left = peer.heard + FRESH_MS - now;
+            if (left > 0 && (next < 0 || left < next))
+                next = left;
+        }
+        return next;
+    }
+
+    /**
      * The list's order: favourites first, then by reachability, then nearest
      * first, then most recently heard. Stable for equal peers.
      */
