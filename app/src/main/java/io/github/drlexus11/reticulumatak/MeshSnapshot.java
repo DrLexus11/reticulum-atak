@@ -92,9 +92,11 @@ public final class MeshSnapshot {
         public final Long txBytes;
         public final String reason;
         public final boolean carriesCommandPost;
+        /** Staged, not yet in effect (Columba compares with the configuration it started with). */
+        public final boolean pending;
 
         Iface(long id, String name, String type, String carrier, boolean enabled, boolean online,
-                Long rxBytes, Long txBytes, String reason, boolean carriesCommandPost) {
+                Long rxBytes, Long txBytes, String reason, boolean carriesCommandPost, boolean pending) {
             this.id = id;
             this.name = name;
             this.type = type;
@@ -105,6 +107,7 @@ public final class MeshSnapshot {
             this.txBytes = txBytes;
             this.reason = reason;
             this.carriesCommandPost = carriesCommandPost;
+            this.pending = pending;
         }
     }
 
@@ -165,7 +168,8 @@ public final class MeshSnapshot {
                             string(f, "carrier"), f.getBoolean("enabled"), f.getBoolean("online"),
                             f.isNull("rx_bytes") ? null : f.getLong("rx_bytes"),
                             f.isNull("tx_bytes") ? null : f.getLong("tx_bytes"),
-                            string(f, "reason"), f.getBoolean("carries_command_post")));
+                            string(f, "reason"), f.getBoolean("carries_command_post"),
+                            f.optBoolean("pending", false)));
                 }
             }
             return new MeshSnapshot(root.getLong("at"), node, propagation, peers, interfaces,

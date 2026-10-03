@@ -203,7 +203,8 @@ A **breaking** change -- a field changing meaning, a method changing signature
       "rx_bytes": 123456,
       "tx_bytes": 65432,
       "reason": null,
-      "carries_command_post": true
+      "carries_command_post": true,
+      "pending": false
     }
   ]
 }
@@ -217,8 +218,19 @@ A **breaking** change -- a field changing meaning, a method changing signature
 - `carries_command_post`: the interface is the next hop of the path to some HQ
   peer -- switching it off would cut the command post off.
 - `interfaces_live`: switches apply at once (Columba's Kotlin backend).
-  `false` on the Python backend, where they are staged; `interfaces_pending`
-  says the configured state differs from what is running, waiting for Apply.
+  `false` on the Python backend, where they are staged.
+- `pending` (per interface) and `interfaces_pending` (any): staged and waiting
+  for Apply. Columba compares the interfaces it would start now with the
+  configuration the stack was last started with, both filtered for the current
+  transport. Not "configured but not running": an interface the transport
+  leaves out, or one that failed to start, is not running and is not staged.
+  The plugin shows Columba's word and does not guess.
+- **The next hop is a configured name.** Both backends report a path's next hop
+  by the interface's configured name ("Board TCP"), or by its string form
+  ("TCPInterface[Board TCP/10.0.0.2:4242]") when the name is empty. Columba
+  resolves either to a configured interface (`NextHop`) for `carrier` and
+  `carries_command_post`. Until 2026-10-03 it read only the string form, so the
+  command post was never marked and the guard never refused.
 
 ## Methods
 

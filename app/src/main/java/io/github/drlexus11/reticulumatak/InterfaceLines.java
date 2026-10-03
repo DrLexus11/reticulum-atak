@@ -14,7 +14,7 @@ public final class InterfaceLines {
             return "Interfaces: switches apply at once";
         int pending = 0;
         for (MeshSnapshot.Iface f : snapshot.interfaces)
-            if (isPending(f))
+            if (f.pending)
                 pending++;
         if (snapshot.interfacesPending)
             return "Interfaces: " + Math.max(pending, 1) + (pending > 1 ? " changes" : " change")
@@ -32,22 +32,19 @@ public final class InterfaceLines {
     }
 
     /**
-     * Staged and not yet in effect (Python backend): switched off but still
-     * online, or switched on and not running. An interface the stack reports
-     * down -- it gives a reason -- is running, not pending.
+     * A row: "Board TCP · TCP · up · carries command post", "… · down: Bluetooth
+     * is off", "… · off (pending)", "… · on (pending)". Pending is Columba's
+     * word, not guessed here: an interface on but not running may be staged, or
+     * left out by the transport, or failed to start.
      */
-    static boolean isPending(MeshSnapshot.Iface f) {
-        return (!f.enabled && f.online) || (f.enabled && !f.online && f.reason == null);
-    }
-
-    /** A row: "Board TCP · TCP · up · carries command post", "… · down: Bluetooth is off", "… · off (pending)". */
     public static String row(MeshSnapshot.Iface f, boolean live) {
         StringBuilder line = new StringBuilder(f.name);
         String carrier = MeshLines.carrier(f.carrier);
         if (carrier != null)
             line.append(" · ").append(carrier);
+        boolean staged = f.pending && !live;
         if (!f.enabled) {
-            line.append(f.online && !live ? " · off (pending)" : " · off");
+            line.append(staged ? " · off (pending)" : " · off");
         } else if (f.online) {
             line.append(" · up");
             if (f.carriesCommandPost)
@@ -55,7 +52,7 @@ public final class InterfaceLines {
         } else if (f.reason != null) {
             line.append(" · down: ").append(f.reason);
         } else {
-            line.append(live ? " · down" : " · on (pending)");
+            line.append(staged ? " · on (pending)" : " · down");
         }
         return line.toString();
     }

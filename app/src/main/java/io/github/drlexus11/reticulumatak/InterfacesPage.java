@@ -138,7 +138,7 @@ final class InterfacesPage implements MeshSession.View {
     }
 
     private static int color(MeshSnapshot.Iface f, boolean live) {
-        if (!live && InterfaceLines.isPending(f))
+        if (!live && f.pending)
             return PENDING;
         if (!f.enabled)
             return OFF;
