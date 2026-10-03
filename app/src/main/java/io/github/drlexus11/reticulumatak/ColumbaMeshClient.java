@@ -49,11 +49,23 @@ public final class ColumbaMeshClient {
         void onResult(int code);
     }
 
+    /** capabilities() bit: interface switching (ColumbaInterface.md, "Interfaces"). */
+    public static final int CAP_INTERFACES = 1;
+    /** Local result: this Columba lacks the capability the call needs. Never sent by Columba. */
+    public static final int NOT_SUPPORTED = -1;
+    private static final int ERR_NOT_READY = 3;
+
+    private interface Call {
+        int run(IColumbaMesh mesh) throws RemoteException;
+    }
+
     private final Context context;
     private final Listener listener;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService commands = Executors.newSingleThreadExecutor();
     private IColumbaMesh mesh;
+    /** What the bound Columba can do beyond v1; 0 until it says, or when unbound. */
+    private volatile int capabilities;
     private boolean bound;
     /**
      * Bumped by stop(): a callback or command result posted before the stop
@@ -83,11 +95,13 @@ public final class ColumbaMeshClient {
                     deliver(State.WRONG_VERSION, null);
                     return;
                 }
+                capabilities = capabilitiesOf(candidate);
                 mesh = candidate;
                 deliver(State.CONNECTED, MeshSnapshot.parse(candidate.snapshot()));
                 candidate.watch(watcher);
             } catch (RemoteException e) {
                 mesh = null;
+                capabilities = 0;
                 deliver(State.LOST, null);
             }
         }
@@ -95,6 +109,7 @@ public final class ColumbaMeshClient {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             mesh = null;
+            capabilities = 0;
             deliver(State.LOST, null);
         }
 
@@ -146,6 +161,7 @@ public final class ColumbaMeshClient {
         generation++;
         IColumbaMesh current = mesh;
         mesh = null;
+        capabilities = 0;
         if (current != null) {
             try {
                 current.unwatch(watcher);
@@ -161,21 +177,51 @@ public final class ColumbaMeshClient {
         }
     }
 
+    /** Whether the bound Columba offers [capability] (a CAP_ bit). */
+    public boolean has(int capability) {
+        return (capabilities & capability) == capability;
+    }
+
     /** Ask Columba to announce this node. Off the main thread: it can take seconds. */
     public void announce(Result result) {
+        command(0, IColumbaMesh::announce, result);
+    }
+
+    /** Switch one configured interface on or off; Columba's guard may refuse. */
+    public void setInterfaceEnabled(long id, boolean enabled, Result result) {
+        command(CAP_INTERFACES, m -> m.setInterfaceEnabled(id, enabled), result);
+    }
+
+    /** Put staged switches into effect (restarts the mesh on a staging backend). */
+    public void applyInterfaces(Result result) {
+        command(CAP_INTERFACES, IColumbaMesh::applyInterfaces, result);
+    }
+
+    /**
+     * One call to Columba off the main thread, its result back on it -- unless
+     * the client was stopped meanwhile.
+     *
+     * [needs] is checked here, not left to Columba: a Columba that predates a
+     * method answers it with an empty reply, which reads as 0, OK. Only the
+     * capability bit tells a done switch from one never heard.
+     */
+    private void command(int needs, Call call, Result result) {
         final IColumbaMesh current = mesh;
         final int asked = generation;
+        final boolean supported = has(needs);
         if (commands.isShutdown())
             return;
         commands.execute(() -> {
             int code;
             if (current == null) {
-                code = 3; // ERR_NOT_READY: nothing bound to ask
+                code = ERR_NOT_READY; // nothing bound to ask
+            } else if (!supported) {
+                code = NOT_SUPPORTED;
             } else {
                 try {
-                    code = current.announce();
+                    code = call.run(current);
                 } catch (RemoteException e) {
-                    code = 3;
+                    code = ERR_NOT_READY;
                 }
             }
             final int reply = code;
@@ -184,6 +230,18 @@ public final class ColumbaMeshClient {
                     result.onResult(reply);
             });
         });
+    }
+
+    /**
+     * capabilities() of a Columba that predates it reads as 0 (see command());
+     * anything thrown counts as 0 too -- v1 still works without it.
+     */
+    private static int capabilitiesOf(IColumbaMesh candidate) {
+        try {
+            return candidate.capabilities();
+        } catch (RemoteException | RuntimeException e) {
+            return 0;
+        }
     }
 
     private void deliver(State state, MeshSnapshot snapshot) {

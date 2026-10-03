@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The plugin's main window: the mesh as this phone sees it.
+ * The pane's first page (MeshPane): the mesh as this phone sees it.
  *
  * A fixed header -- the mesh, the command post and the relay, one short line
  * each, state first, and Announce -- over a list that scrolls on its own:
@@ -43,7 +43,7 @@ final class MeshPanel implements MeshSession.View {
     MeshPanel(Context pluginContext, MeshSession session) {
         this.pluginContext = pluginContext;
         this.session = session;
-        root = PluginLayoutInflater.inflate(pluginContext, R.layout.main_layout, null);
+        root = PluginLayoutInflater.inflate(pluginContext, R.layout.mesh_page, null);
         status = root.findViewById(R.id.status_line);
         commandPost = root.findViewById(R.id.command_post_line);
         relay = root.findViewById(R.id.relay_line);

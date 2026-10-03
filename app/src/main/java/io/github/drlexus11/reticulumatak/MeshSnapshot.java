@@ -80,16 +80,55 @@ public final class MeshSnapshot {
         }
     }
 
+    /** A configured interface and its running state (ColumbaInterface.md, "Interfaces"). */
+    public static final class Iface {
+        public final long id;
+        public final String name;
+        public final String type;
+        public final String carrier;
+        public final boolean enabled;
+        public final boolean online;
+        public final Long rxBytes;
+        public final Long txBytes;
+        public final String reason;
+        public final boolean carriesCommandPost;
+        /** Staged, not yet in effect (Columba compares with the configuration it started with). */
+        public final boolean pending;
+
+        Iface(long id, String name, String type, String carrier, boolean enabled, boolean online,
+                Long rxBytes, Long txBytes, String reason, boolean carriesCommandPost, boolean pending) {
+            this.id = id;
+            this.name = name;
+            this.type = type;
+            this.carrier = carrier;
+            this.enabled = enabled;
+            this.online = online;
+            this.rxBytes = rxBytes;
+            this.txBytes = txBytes;
+            this.reason = reason;
+            this.carriesCommandPost = carriesCommandPost;
+            this.pending = pending;
+        }
+    }
+
     public final long at;
     public final Node node;
     public final Propagation propagation;
     public final List<Peer> peers;
+    /** Interfaces capability; empty from a Columba without it. */
+    public final List<Iface> interfaces;
+    public final boolean interfacesLive;
+    public final boolean interfacesPending;
 
-    private MeshSnapshot(long at, Node node, Propagation propagation, List<Peer> peers) {
+    private MeshSnapshot(long at, Node node, Propagation propagation, List<Peer> peers,
+            List<Iface> interfaces, boolean interfacesLive, boolean interfacesPending) {
         this.at = at;
         this.node = node;
         this.propagation = propagation;
         this.peers = Collections.unmodifiableList(peers);
+        this.interfaces = Collections.unmodifiableList(interfaces);
+        this.interfacesLive = interfacesLive;
+        this.interfacesPending = interfacesPending;
     }
 
     /** Null for anything that is not a version 1 snapshot. */
@@ -119,7 +158,22 @@ public final class MeshSnapshot {
                         p.getLong("heard"), p.getBoolean("path"), integer(p, "hops"),
                         string(p, "carrier"), string(p, "interface")));
             }
-            return new MeshSnapshot(root.getLong("at"), node, propagation, peers);
+            // Optional (the interfaces capability): absent from an older Columba.
+            List<Iface> interfaces = new ArrayList<>();
+            JSONArray ifaces = root.optJSONArray("interfaces");
+            if (ifaces != null) {
+                for (int i = 0; i < ifaces.length(); i++) {
+                    JSONObject f = ifaces.getJSONObject(i);
+                    interfaces.add(new Iface(f.getLong("id"), f.getString("name"), f.getString("type"),
+                            string(f, "carrier"), f.getBoolean("enabled"), f.getBoolean("online"),
+                            f.isNull("rx_bytes") ? null : f.getLong("rx_bytes"),
+                            f.isNull("tx_bytes") ? null : f.getLong("tx_bytes"),
+                            string(f, "reason"), f.getBoolean("carries_command_post"),
+                            f.optBoolean("pending", false)));
+                }
+            }
+            return new MeshSnapshot(root.getLong("at"), node, propagation, peers, interfaces,
+                    root.optBoolean("interfaces_live", false), root.optBoolean("interfaces_pending", false));
         } catch (JSONException e) {
             return null;
         }

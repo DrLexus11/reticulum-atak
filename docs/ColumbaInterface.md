@@ -4,8 +4,10 @@ The contract between Columba (the phone's Reticulum node) and this plugin.
 Columba owns it and serves it; the plugin is a client. Both repositories carry
 the same AIDL file and the same snapshot fixture, and both test against the
 fixture -- the discipline the firmware and Columba already keep for
-`tak_native_v1.json`. A change to either is a version bump, made in both
-repositories in the same week.
+`tak_native_v1.json`. A **breaking** change to either is a version bump, made
+in both repositories in the same week; an **additive** one -- optional snapshot
+fields, methods appended behind a capability bit -- keeps version 1 (see
+"Interfaces: an additive capability" below).
 
 Decisions behind it: `OpenDecisions.md` 1 (a bound service, a caller
 allow-list, read plus named commands behind a setting) and 5 (propagation node).
@@ -66,10 +68,12 @@ Result codes: `0 OK`, `1 ERR_CALLER` (not on the allow-list), `2 ERR_CONTROL_OFF
 (Columba's "allow ATAK control" is off), `3 ERR_NOT_READY` (Reticulum not
 running), `4 ERR_RATE_LIMITED`.
 
-Commands added after PR F -- switch an interface, select the propagation node,
-fetch a NomadNet page -- arrive as version 2, with their own codes. The
-interface switch carries its guard in Columba: a switch that would leave no
-path to the command post, or no interface up, is refused there.
+Later commands arrive as additive capabilities, with their own codes: the
+interface switch is the first, in PR F (moved in on 2026-10-03; see
+"Interfaces: an additive capability" below), and selecting the propagation
+node and fetching a NomadNet page follow after PR F. The interface switch
+carries its guard in Columba: a switch that would leave no path to the command
+post, or no interface up, is refused there.
 
 **Announce is rate-limited, and not out of politeness.** Reticulum relays block
 a destination that announces faster than their rate allowance, which costs the
@@ -172,6 +176,15 @@ cut off every installed plugin. Instead:
 - A new `capabilities()` says what the service offers. Against a Columba that
   predates it, the call has no implementation and returns 0, so a newer plugin
   sees no capabilities and simply hides the Interfaces page.
+- **The capability bit is the only trustworthy answer.** An older Columba's
+  binder does not know the new transaction codes: it answers with an empty
+  reply, and the generated proxy reads an empty reply as "no exception, 0".
+  That is why `capabilities()` comes back 0. But it also means
+  `setInterfaceEnabled` and `applyInterfaces` would come back 0, which is `OK`,
+  for a switch that was never heard. The plugin therefore checks the bit before
+  every such call and reports "this Columba cannot switch interfaces" without
+  asking (`ColumbaMeshClient.command`). Every future appended method gets the
+  same gate.
 
 A **breaking** change -- a field changing meaning, a method changing signature
 -- is what bumps `version()`; the plugin refuses a version it does not know.
@@ -194,7 +207,8 @@ A **breaking** change -- a field changing meaning, a method changing signature
       "rx_bytes": 123456,
       "tx_bytes": 65432,
       "reason": null,
-      "carries_command_post": true
+      "carries_command_post": true,
+      "pending": false
     }
   ]
 }
@@ -208,8 +222,19 @@ A **breaking** change -- a field changing meaning, a method changing signature
 - `carries_command_post`: the interface is the next hop of the path to some HQ
   peer -- switching it off would cut the command post off.
 - `interfaces_live`: switches apply at once (Columba's Kotlin backend).
-  `false` on the Python backend, where they are staged; `interfaces_pending`
-  says the configured state differs from what is running, waiting for Apply.
+  `false` on the Python backend, where they are staged.
+- `pending` (per interface) and `interfaces_pending` (any): staged and waiting
+  for Apply. Columba compares the interfaces it would start now with the
+  configuration the stack was last started with, both filtered for the current
+  transport. Not "configured but not running": an interface the transport
+  leaves out, or one that failed to start, is not running and is not staged.
+  The plugin shows Columba's word and does not guess.
+- **The next hop is a configured name.** Both backends report a path's next hop
+  by the interface's configured name ("Board TCP"), or by its string form
+  ("TCPInterface[Board TCP/10.0.0.2:4242]") when the name is empty. Columba
+  resolves either to a configured interface (`NextHop`) for `carrier` and
+  `carries_command_post`. Until 2026-10-03 it read only the string form, so the
+  command post was never marked and the guard never refused.
 
 ## Methods
 
