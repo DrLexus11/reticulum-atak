@@ -35,6 +35,14 @@ user (messages go through ATAK's GeoChat, as today), deleting, identity
 operations. (First decided read-only; the features agreed the same day need
 the four commands.)
 
+**Interface switching, how it applies** (found 2026-10-03): Columba's Kotlin
+backend switches interfaces live; its Python backend cannot -- upstream RNS
+reads interfaces only at start -- so there a switch is staged and applied by an
+explicit "Apply", which restarts Columba's Reticulum (3-5 s, links drop). The
+plugin says which in one line and never restarts the mesh on a single tap. The
+bench builds have used the Python backend, for no recorded reason; which
+backend the fleet runs is a separate decision.
+
 **Guards live in Columba, not in the plugin.** Any plugin loaded in ATAK can
 call the service, so a check in this plugin's UI protects nothing. Columba
 refuses, with its own result code, an interface switch that would leave the
