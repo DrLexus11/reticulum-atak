@@ -158,19 +158,29 @@ the first implementation happens to produce. The `expect` block is the plugin's
 3. The plugin: bind, check the version, render the panel from snapshots;
    locate, open GeoChat, announce.
 
-# Version 2: interfaces -- planned 2026-10-03
+# Interfaces: an additive capability -- planned 2026-10-03
 
-For the plugin's Interfaces page (Roadmap, "Pages"). Version 2 only **adds**:
-v1's methods, fields and result codes are unchanged, the AIDL gains methods at
-its end (AIDL transaction codes are positional, so appending keeps a v1 client
-working), and `version()` returns 2. The plugin accepts 1 or 2 and shows the
-Interfaces page only on 2.
+For the plugin's Interfaces page (Roadmap, "Pages"). **Additive, so not a new
+version:** `version()` stays 1 and so does the snapshot's `"v"`, because a
+version 1 client refuses anything else -- deploying a Columba that said 2 would
+cut off every installed plugin. Instead:
 
-## Snapshot additions
+- The snapshot gains optional fields, which a version 1 client ignores (it
+  reads the fields it knows; org.json skips the rest).
+- The AIDL gains methods **at its end**, so the transaction codes of the version
+  1 methods are unchanged.
+- A new `capabilities()` says what the service offers. Against a Columba that
+  predates it, the call has no implementation and returns 0, so a newer plugin
+  sees no capabilities and simply hides the Interfaces page.
+
+A **breaking** change -- a field changing meaning, a method changing signature
+-- is what bumps `version()`; the plugin refuses a version it does not know.
+
+## Snapshot fields
 
 ```json
 {
-  "v": 2,
+  "v": 1,
   "interfaces_live": false,
   "interfaces_pending": true,
   "interfaces": [
@@ -191,41 +201,46 @@ Interfaces page only on 2.
 ```
 
 - One entry per **configured** interface (Columba's database: id, name, type,
-  enabled), joined by name with the **running** stack's state (online, bytes,
-  the stack's own one-line reason when it is down). A configured interface the
-  stack does not run is `online: false`.
-- `carrier` as in v1, from the type.
+  enabled), joined by exact name -- as Columba's own interface screen joins them
+  -- with the **running** stack's state (online, bytes, the stack's own
+  one-line reason when it is down). Configured but not running: `online: false`.
+- `carrier` as in v1, from the configured type.
 - `carries_command_post`: the interface is the next hop of the path to some HQ
   peer -- switching it off would cut the command post off.
 - `interfaces_live`: switches apply at once (Columba's Kotlin backend).
   `false` on the Python backend, where they are staged; `interfaces_pending`
-  says a staged change is waiting for Apply.
+  says the configured state differs from what is running, waiting for Apply.
 
-## Commands
+## Methods
 
 ```aidl
-    /** Switch one configured interface. Result codes below. */
+    // appended after announce():
+    /** Bitmask of what this service offers: 1 = interfaces. 0 from a Columba that predates it. */
+    int capabilities();
+    /** Switch one configured interface. */
     int setInterfaceEnabled(long id, boolean enabled);
-    /** Apply staged switches: restarts Columba's Reticulum (Python backend). */
+    /** Apply staged switches: restarts Columba's Reticulum where it cannot switch live. */
     int applyInterfaces();
 ```
 
-Both are refused like every command: `1 ERR_CALLER`, `2 ERR_CONTROL_OFF`
-("allow ATAK control" off), `3 ERR_NOT_READY`. New codes:
+Both commands are refused like every command: `1 ERR_CALLER`, `2
+ERR_CONTROL_OFF` ("allow ATAK control" off), `3 ERR_NOT_READY`. New codes:
 
-- `5 ERR_WOULD_ISOLATE` -- Columba's guard, on the **resulting** set of
-  interfaces: never switch off the one carrying the command post's path, never
-  leave no interface online. Checked in Columba, so no caller can bypass it.
+- `5 ERR_WOULD_ISOLATE` -- Columba's guard, on the **resulting** set: never
+  switch off the interface carrying the command post's path, never leave no
+  interface online. In Columba, so no caller can bypass it.
 - `6 ERR_UNKNOWN_INTERFACE` -- no configured interface with that id.
 - `7 OK_PENDING` -- accepted and staged; it takes effect on `applyInterfaces()`.
-- `applyInterfaces()` with nothing staged returns `0 OK` and restarts nothing.
+- `applyInterfaces()` with nothing staged, or where switches are live, returns
+  `0 OK` and restarts nothing.
 
-Every command is logged in Columba with its caller, as in v1. The plugin asks
+Every command is logged in Columba with its caller, as before. The plugin asks
 for confirmation before Apply and says what it costs: "Restarts the mesh on
 this phone (about 5 s); links drop and rebuild."
 
 ## Fixture
 
-`fixtures/columba_mesh_v2.json`: a v2 snapshot with a live and a staged case,
-an interface carrying the command post's path, and one configured but not
-running -- both sides test against it, as for v1.
+`fixtures/columba_mesh_interfaces.json`: snapshots with the interface fields --
+a staged case with an interface carrying the command post's path, one configured
+but not running, and a live case. Both sides test against it, as for
+`columba_mesh_v1.json`.

@@ -67,12 +67,11 @@ the plugin's second swipeable page -- see "Pages" below.)
    first command, announce.
 5. **Mesh panel** with locate, open-GeoChat and announce; the propagation
    node's status. Board health waits for decision 4.
-6. **Outdoor Test 1** with the plugin installed.
-
 6. **Interfaces page** (moved in): Columba's interfaces in the snapshot, and a
    switch command behind "allow ATAK control" with Columba's guard
    (`OpenDecisions.md` 1); the plugin's pager with Mesh as page 1 and
    Interfaces as page 2.
+7. **Outdoor Test 1** with the plugin installed.
 
 **After Outdoor Test 1**, each its own pull request: propagation
 node selection and fallback; NomadNet pages, then feeds; delivery state and
