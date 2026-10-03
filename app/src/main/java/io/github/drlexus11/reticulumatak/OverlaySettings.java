@@ -10,15 +10,15 @@ import android.content.SharedPreferences;
  */
 final class OverlaySettings {
     enum Size {
-        // Operator, on the bench: the first Small (14) was already too large, so
-        // it became Large and the others scale down from it.
-        SMALL(9f), MEDIUM(11f), LARGE(14f);
+        // Offsets from ATAK's own map label size, so the overlay follows the
+        // operator's label-size setting: Medium reads as ATAK's labels do.
+        SMALL(-3), MEDIUM(0), LARGE(3);
 
-        /** Text size in sp; rows grow and shrink with it (FavouritesOverlay). */
-        final float textSp;
+        /** Added to ATAK's label font size (AtakMapView.getTextFormat). */
+        final int offset;
 
-        Size(float textSp) {
-            this.textSp = textSp;
+        Size(int offset) {
+            this.offset = offset;
         }
     }
 
