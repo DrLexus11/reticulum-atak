@@ -53,6 +53,10 @@ fetching** (a file's size against the route's measured rate).
 
 **PR F, before Outdoor Test 1:**
 
+(Moved in on 2026-10-03, operator: the **Interfaces page**, with switches from
+the start, as a quick diagnosis tool the outdoor test itself will want. It is
+the plugin's second swipeable page -- see "Pages" below.)
+
 1. Decisions -- **made** (`OpenDecisions.md` 1, 2, 5); the interface they
    imply, `ColumbaInterface.md`, with its fixture.
 2. Mesh telemetry, in the firmware repository (F1-F5).
@@ -63,10 +67,23 @@ fetching** (a file's size against the route's measured rate).
    first command, announce.
 5. **Mesh panel** with locate, open-GeoChat and announce; the propagation
    node's status. Board health waits for decision 4.
-6. **Outdoor Test 1** with the plugin installed.
+6. **Interfaces page** (moved in): Columba's interfaces in the snapshot, and a
+   switch command behind "allow ATAK control" with Columba's guard
+   (`OpenDecisions.md` 1); the plugin's pager with Mesh as page 1 and
+   Interfaces as page 2.
+7. **Outdoor Test 1** with the plugin installed.
 
-**After Outdoor Test 1**, each its own pull request: interfaces; propagation
+**After Outdoor Test 1**, each its own pull request: propagation
 node selection and fallback; NomadNet pages, then feeds; delivery state and
 queues; cost before fetching; team rooms over RRC once Eridanus is merged.
 
 Each step is tested on the bench phones before it merges.
+
+## Pages
+
+The plugin's window grows by **swipeable pages**, the structure ATAK uses for
+marker details: an androidx `ViewPager` (ATAK ships it, so the plugin bundles
+nothing), a title naming the current page, and page-indicator dots -- TAK's own
+sample is `helloworld`'s `TabViewDropDown`. Page 1 is **Mesh** (status, peers,
+announce, the overlay's controls); page 2 is **Interfaces**. Later features
+take further pages rather than crowding the first.
