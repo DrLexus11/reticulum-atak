@@ -1,63 +1,67 @@
 package io.github.drlexus11.reticulumatak;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.LinearLayout;
+import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.atak.plugins.impl.PluginLayoutInflater;
-import com.atakmap.android.chat.ChatManagerMapComponent;
-import com.atakmap.android.contact.Contact;
-import com.atakmap.android.contact.Contacts;
-import com.atakmap.android.contact.IndividualContact;
-import com.atakmap.android.maps.MapItem;
 import com.atakmap.android.maps.MapView;
-import com.atakmap.android.util.ATAKUtilities;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The plugin's main window: the mesh as this phone sees it.
  *
- * Three status lines -- the mesh, the command post, the relay -- an announce
- * button, and one row per team peer with its route and two buttons: Map pans
- * to the peer's marker, Chat opens ATAK's own GeoChat with them, which already
- * travels over the mesh through Columba. Every line is one short statement,
- * state first.
+ * A fixed header -- the mesh, the command post and the relay, one short line
+ * each, state first, and Announce -- over a list that scrolls on its own:
+ * favourites first, then reachable peers nearest first, then the rest. Each row
+ * has a reachability dot (PeerStatus) and ATAK's own icons for favourite,
+ * pan-to-marker and chat. A view on the plugin's MeshSession; the session lives
+ * on when the panel closes.
  */
-final class MeshPanel implements ColumbaMeshClient.Listener {
+final class MeshPanel implements MeshSession.View {
     private final Context pluginContext;
+    private final MeshSession session;
     private final View root;
     private final TextView status;
     private final TextView commandPost;
     private final TextView relay;
     private final Button announce;
-    private final LinearLayout peers;
-    private final ColumbaMeshClient client;
-    private final ColumbaLink link;
+    private final PeerAdapter adapter = new PeerAdapter();
     private ColumbaMeshClient.State lastState = ColumbaMeshClient.State.CONNECTING;
     private MeshSnapshot lastSnapshot;
 
-    MeshPanel(Context pluginContext, Context hostContext) {
+    MeshPanel(Context pluginContext, MeshSession session) {
         this.pluginContext = pluginContext;
+        this.session = session;
         root = PluginLayoutInflater.inflate(pluginContext, R.layout.main_layout, null);
         status = root.findViewById(R.id.status_line);
         commandPost = root.findViewById(R.id.command_post_line);
         relay = root.findViewById(R.id.relay_line);
         announce = root.findViewById(R.id.announce_button);
-        peers = root.findViewById(R.id.peer_list);
-        // Bound through ATAK's own context: it is ATAK that Columba sees calling.
-        client = new ColumbaMeshClient(hostContext.getApplicationContext(), this);
-        // Redraw when ATAK's connections change: the link line must not wait
-        // for the next mesh change to say the link went down.
-        link = new ColumbaLink(() -> onMesh(lastState, lastSnapshot));
+        ((ListView) root.findViewById(R.id.peer_list)).setAdapter(adapter);
+        // The map overlay's size and place, here where the operator already is.
+        bindSize(R.id.overlay_small, OverlaySettings.Size.SMALL);
+        bindSize(R.id.overlay_medium, OverlaySettings.Size.MEDIUM);
+        bindSize(R.id.overlay_large, OverlaySettings.Size.LARGE);
+        root.findViewById(R.id.overlay_reset).setOnClickListener(v -> session.resetOverlayPosition());
+        markSize();
         announce.setOnClickListener(v -> {
             announce.setEnabled(false);
-            client.announce(code -> {
+            session.client().announce(code -> {
                 // From the state now, not the one the request was made in:
                 // Columba may have gone away while it was answering.
                 announce.setEnabled(canAnnounce());
-                say(MeshLines.announce(code));
+                PeerActions.say(pluginContext, MeshLines.announce(code));
             });
         });
     }
@@ -66,18 +70,25 @@ final class MeshPanel implements ColumbaMeshClient.Listener {
         return root;
     }
 
-    void start() {
-        client.start();
+    private void bindSize(int id, OverlaySettings.Size size) {
+        root.findViewById(id).setOnClickListener(v -> {
+            session.setOverlaySize(size);
+            markSize();
+        });
     }
 
-    void stop() {
-        client.dispose();
-        link.stop();
+    /** The chosen size is selected -- for screen readers too -- and the others dimmed. */
+    private void markSize() {
+        OverlaySettings.Size current = session.overlaySize();
+        mark(root.findViewById(R.id.overlay_small), current == OverlaySettings.Size.SMALL);
+        mark(root.findViewById(R.id.overlay_medium), current == OverlaySettings.Size.MEDIUM);
+        mark(root.findViewById(R.id.overlay_large), current == OverlaySettings.Size.LARGE);
     }
 
-    private boolean canAnnounce() {
-        return lastState == ColumbaMeshClient.State.CONNECTED && lastSnapshot != null
-                && lastSnapshot.node.running;
+    /** Selected and lit, or not selected and dimmed: state that accessibility services read. */
+    private static void mark(View view, boolean on) {
+        view.setSelected(on);
+        view.setAlpha(on ? 1f : 0.45f);
     }
 
     @Override
@@ -89,50 +100,20 @@ final class MeshPanel implements ColumbaMeshClient.Listener {
             commandPost.setText("");
             relay.setText("");
             announce.setEnabled(false);
-            peers.removeAllViews();
+            adapter.show(new ArrayList<MeshSnapshot.Peer>(), 0);
             return;
         }
         long now = System.currentTimeMillis();
-        // Columba is serving: make sure ATAK is connected to it (ColumbaLink).
-        if (snapshot.node.running && link.ensure())
-            say("Linking ATAK to Columba");
-        status.setText(MeshLines.node(snapshot, ColumbaLink.connected()));
+        status.setText(MeshLines.node(snapshot, session.linked()));
         commandPost.setText(MeshLines.commandPost(snapshot));
         relay.setText(MeshLines.relay(snapshot));
         announce.setEnabled(canAnnounce());
-        peers.removeAllViews();
-        for (MeshSnapshot.Peer peer : snapshot.peers)
-            peers.addView(row(peer, now));
+        adapter.show(PeerStatus.ordered(snapshot.peers, session.favourites().all(), now), now);
     }
 
-    private View row(MeshSnapshot.Peer peer, long now) {
-        View row = PluginLayoutInflater.inflate(pluginContext, R.layout.peer_row, null);
-        String name = peer.callsign != null ? peer.callsign : peer.uid;
-        ((TextView) row.findViewById(R.id.peer_name))
-                .setText(peer.role != null ? name + " · " + peer.role : name);
-        ((TextView) row.findViewById(R.id.peer_route)).setText(MeshLines.peer(peer, now));
-        row.findViewById(R.id.peer_locate).setOnClickListener(v -> locate(peer, name));
-        row.findViewById(R.id.peer_chat).setOnClickListener(v -> chat(peer, name));
-        return row;
-    }
-
-    private void locate(MeshSnapshot.Peer peer, String name) {
-        MapView map = MapView.getMapView();
-        MapItem item = map != null ? map.getRootGroup().deepFindUID(peer.uid) : null;
-        if (item == null) {
-            say("No marker: " + name);
-            return;
-        }
-        ATAKUtilities.scaleToFit(item);
-    }
-
-    private void chat(MeshSnapshot.Peer peer, String name) {
-        Contact contact = Contacts.getInstance().getContactByUuid(peer.uid);
-        if (!(contact instanceof IndividualContact)) {
-            say("Not a contact yet: " + name);
-            return;
-        }
-        ChatManagerMapComponent.getInstance().openConversation((IndividualContact) contact, true);
+    private boolean canAnnounce() {
+        return lastState == ColumbaMeshClient.State.CONNECTED && lastSnapshot != null
+                && lastSnapshot.node.running;
     }
 
     private static String stateLine(ColumbaMeshClient.State state) {
@@ -152,9 +133,103 @@ final class MeshPanel implements ColumbaMeshClient.Listener {
         }
     }
 
-    private void say(String line) {
+    /**
+     * The row's action icons at ATAK's own list_item_action_icon_size, centred
+     * in a 48dp touch target -- the size ATAK uses for actions in its own lists.
+     */
+    private static void sizeActions(View row, int... ids) {
         MapView map = MapView.getMapView();
-        Context context = map != null ? map.getContext() : pluginContext;
-        Toast.makeText(context, line, Toast.LENGTH_SHORT).show();
+        if (map == null)
+            return;
+        android.content.res.Resources res = map.getContext().getResources();
+        int icon;
+        try {
+            icon = res.getDimensionPixelSize(com.atakmap.app.R.dimen.list_item_action_icon_size);
+        } catch (RuntimeException e) {
+            icon = Math.round(24 * res.getDisplayMetrics().density);
+        }
+        int target = Math.max(icon, Math.round(48 * res.getDisplayMetrics().density));
+        int pad = (target - icon) / 2;
+        for (int id : ids) {
+            View button = row.findViewById(id);
+            ViewGroup.LayoutParams lp = button.getLayoutParams();
+            lp.width = target;
+            lp.height = target;
+            button.setLayoutParams(lp);
+            button.setPadding(pad, pad, pad, pad);
+        }
+    }
+
+    /** ATAK's own drawable, from ATAK's resources; null if this ATAK lacks it. */
+    private static Drawable atakIcon(int id) {
+        MapView map = MapView.getMapView();
+        try {
+            return map != null ? map.getContext().getResources().getDrawable(id) : null;
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    private final class PeerAdapter extends BaseAdapter {
+        private List<MeshSnapshot.Peer> peers = new ArrayList<>();
+        private long now;
+
+        void show(List<MeshSnapshot.Peer> peers, long now) {
+            this.peers = peers;
+            this.now = now;
+            notifyDataSetChanged();
+        }
+
+        @Override
+        public int getCount() {
+            return peers.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return peers.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View row = convertView != null ? convertView
+                    : PluginLayoutInflater.inflate(pluginContext, R.layout.peer_row, null);
+            final MeshSnapshot.Peer peer = peers.get(position);
+            Set<String> favourites = session.favourites().all();
+            String name = PeerActions.name(peer);
+            ((TextView) row.findViewById(R.id.peer_name))
+                    .setText(peer.role != null ? name + " · " + peer.role : name);
+            ((TextView) row.findViewById(R.id.peer_route)).setText(MeshLines.peer(peer, now));
+
+            sizeActions(row, R.id.peer_favourite, R.id.peer_locate, R.id.peer_chat);
+
+            GradientDrawable dot = (GradientDrawable) row.findViewById(R.id.peer_dot).getBackground().mutate();
+            dot.setColor(PeerStatus.color(PeerStatus.of(peer, now)));
+
+            ImageButton star = row.findViewById(R.id.peer_favourite);
+            star.setImageDrawable(atakIcon(com.atakmap.app.R.drawable.lpt_white_star_drawable));
+            // Lit when chosen, dimmed when not: the same icon, as ATAK does --
+            // and selected, which screen readers announce.
+            boolean favourite = favourites.contains(peer.uid);
+            star.setSelected(favourite);
+            star.setAlpha(favourite ? 1f : 0.3f);
+            star.setOnClickListener(v -> session.favourites().toggle(peer.uid));
+
+            ImageButton locate = row.findViewById(R.id.peer_locate);
+            // ATAK's own "center on" (its navigation toolbar's), not ic_menu_goto,
+            // whose plus reads as "add".
+            locate.setImageDrawable(atakIcon(com.atakmap.app.R.drawable.nav_center));
+            locate.setOnClickListener(v -> PeerActions.locate(pluginContext, peer));
+
+            ImageButton chat = row.findViewById(R.id.peer_chat);
+            chat.setImageDrawable(atakIcon(com.atakmap.app.R.drawable.ic_menu_chat));
+            chat.setOnClickListener(v -> session.chatFromPanel(peer));
+            return row;
+        }
     }
 }

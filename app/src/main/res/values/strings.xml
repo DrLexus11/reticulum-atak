@@ -6,4 +6,11 @@
     <string name="announce">Announce</string>
     <string name="locate">Map</string>
     <string name="chat">Chat</string>
+    <string name="favourite">Favourite</string>
+    <string name="pane_name">Mesh</string>
+    <string name="overlay_label">Map overlay</string>
+    <string name="size_small">S</string>
+    <string name="size_medium">M</string>
+    <string name="size_large">L</string>
+    <string name="overlay_reset">Reset place</string>
 </resources>

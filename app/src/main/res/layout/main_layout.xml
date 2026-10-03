@@ -1,45 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Fixed header – the three status lines and Announce – over a list that
+     scrolls on its own, so the state stays in view however many peers there are. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:fadeScrollbars="false"
-    android:layout_marginLeft="3dp"
-    android:layout_marginRight="3dp">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="6dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="6dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/status_line"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:text="@string/pane_empty" />
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/command_post_line"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/status_line"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:text="@string/pane_empty" />
 
-        <TextView
-            android:id="@+id/relay_line"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/command_post_line"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/relay_line"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/announce_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:text="@string/announce" />
-
-        <LinearLayout
-            android:id="@+id/peer_list"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
-
     </LinearLayout>
-</ScrollView>
+
+    <ListView
+        android:id="@+id/peer_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="4dp"
+        android:fadeScrollbars="false" />
+
+    <!-- The map overlay of favourites: its size, and back to its default place.
+         It is moved by dragging its header on the map. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/overlay_label" />
+
+        <Button android:id="@+id/overlay_small" style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="44dp" android:text="@string/size_small" />
+        <Button android:id="@+id/overlay_medium" style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="44dp" android:text="@string/size_medium" />
+        <Button android:id="@+id/overlay_large" style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="44dp" android:text="@string/size_large" />
+        <Button android:id="@+id/overlay_reset" style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/overlay_reset" />
+    </LinearLayout>
+</LinearLayout>
