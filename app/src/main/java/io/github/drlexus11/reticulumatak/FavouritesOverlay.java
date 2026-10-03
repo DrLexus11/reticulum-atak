@@ -12,6 +12,8 @@ import com.atakmap.android.widgets.MapWidget;
 import com.atakmap.android.widgets.RootLayoutWidget;
 import com.atakmap.android.widgets.TextWidget;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -44,6 +46,11 @@ final class FavouritesOverlay {
     private RootLayoutWidget root;
     private LinearLayoutWidget column;
     private MeshSnapshot last;
+    // The rows on screen, so an update can change them in place.
+    private final List<TextWidget> rows = new ArrayList<>();
+    private final List<String> rowUids = new ArrayList<>();
+    private final List<Integer> rowColors = new ArrayList<>();
+    private final List<MeshSnapshot.Peer> rowPeers = new ArrayList<>();
 
     // Header drag state.
     private float downX, downY, startX, startY;
@@ -66,50 +73,94 @@ final class FavouritesOverlay {
         }
     }
 
-    /** Redraw from a snapshot. Null, or no favourite among the peers: nothing shown. */
+    /**
+     * Redraw from a snapshot. Null, or no favourite among the peers: nothing shown.
+     *
+     * In place when the same favourites are shown in the same order -- only the
+     * text and colour of a row that changed are touched. Removing and re-adding
+     * every row on each update flickered while the map moved (bench, 2026-10-03):
+     * updates arrive every few seconds and with every change to ATAK's links.
+     */
     void update(MeshSnapshot snapshot) {
         last = snapshot;
         if (column == null)
             return;
+        List<MeshSnapshot.Peer> shown = new ArrayList<>();
+        long now = System.currentTimeMillis();
+        if (snapshot != null) {
+            Set<String> chosen = favourites.all();
+            for (MeshSnapshot.Peer peer : PeerStatus.ordered(snapshot.peers, chosen, now)) {
+                if (!chosen.contains(peer.uid))
+                    break; // favourites come first; the rest are not shown here
+                shown.add(peer);
+            }
+        }
+        List<String> uids = new ArrayList<>();
+        for (MeshSnapshot.Peer peer : shown)
+            uids.add(peer.uid);
+        if (!uids.equals(rowUids)) {
+            rebuild(shown, now);
+            return;
+        }
+        for (int i = 0; i < shown.size(); i++) {
+            MeshSnapshot.Peer peer = shown.get(i);
+            TextWidget row = rows.get(i);
+            String text = "\u25CF " + PeerStatus.overlayLine(peer);
+            int color = PeerStatus.color(PeerStatus.of(peer, now));
+            if (!text.equals(row.getText()))
+                row.setText(text);
+            if (color != rowColors.get(i)) {
+                row.setColor(color);
+                rowColors.set(i, color);
+            }
+            rowPeers.set(i, peer); // tap and long-press act on the latest state
+        }
+    }
+
+    /** Remove everything and lay the column out again: a new set of favourites, or a new size. */
+    private void rebuild(List<MeshSnapshot.Peer> shown, long now) {
         for (int i = column.getChildWidgets().size() - 1; i >= 0; i--)
             column.removeWidgetAt(i);
-        if (snapshot == null)
+        rows.clear();
+        rowUids.clear();
+        rowColors.clear();
+        rowPeers.clear();
+        if (shown.isEmpty())
             return;
-        Set<String> chosen = favourites.all();
-        long now = System.currentTimeMillis();
         MapTextFormat format = format();
         float pad = padding(format);
-        boolean any = false;
-        for (final MeshSnapshot.Peer peer : PeerStatus.ordered(snapshot.peers, chosen, now)) {
-            if (!chosen.contains(peer.uid))
-                break; // favourites come first; the rest are not shown here
-            if (!any) {
-                column.addWidget(header(format, pad));
-                any = true;
-            }
-            TextWidget row = new TextWidget("● " + PeerStatus.overlayLine(peer), format);
-            row.setColor(PeerStatus.color(PeerStatus.of(peer, now)));
+        column.addWidget(header(format, pad));
+        for (MeshSnapshot.Peer peer : shown) {
+            final int index = rows.size();
+            int color = PeerStatus.color(PeerStatus.of(peer, now));
+            TextWidget row = new TextWidget("\u25CF " + PeerStatus.overlayLine(peer), format);
+            row.setColor(color);
             row.setBackground(BACKING);
             row.setPadding(pad, pad, pad * 1.5f, pad);
             row.setMargins(0f, 0f, 0f, 2f);
             row.addOnClickListener(new MapWidget.OnClickListener() {
                 @Override
                 public void onMapWidgetClick(MapWidget widget, MotionEvent event) {
-                    PeerActions.locate(pluginContext, peer);
+                    PeerActions.locate(pluginContext, rowPeers.get(index));
                 }
             });
             row.addOnLongPressListener(new MapWidget.OnLongPressListener() {
                 @Override
                 public void onMapWidgetLongPress(MapWidget widget) {
-                    PeerActions.chat(pluginContext, peer, onChat);
+                    PeerActions.chat(pluginContext, rowPeers.get(index), onChat);
                 }
             });
             column.addWidget(row);
+            rows.add(row);
+            rowUids.add(peer.uid);
+            rowColors.add(color);
+            rowPeers.add(peer);
         }
     }
 
     /** Redraw at the current size (after a size change in the panel). */
     void refresh() {
+        rowUids.clear(); // forces a rebuild with the new format
         update(last);
     }
 
@@ -124,6 +175,10 @@ final class FavouritesOverlay {
             return;
         for (int i = column.getChildWidgets().size() - 1; i >= 0; i--)
             column.removeWidgetAt(i);
+        rows.clear();
+        rowUids.clear();
+        rowColors.clear();
+        rowPeers.clear();
         if (root != null)
             root.removeWidget(column);
         column = null;
