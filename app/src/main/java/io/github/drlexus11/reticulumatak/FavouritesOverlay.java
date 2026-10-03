@@ -2,7 +2,6 @@ package io.github.drlexus11.reticulumatak;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 
 import com.atakmap.android.maps.MapTextFormat;
@@ -11,6 +10,7 @@ import com.atakmap.android.widgets.LinearLayoutWidget;
 import com.atakmap.android.widgets.MapWidget;
 import com.atakmap.android.widgets.RootLayoutWidget;
 import com.atakmap.android.widgets.TextWidget;
+import com.atakmap.map.AtakMapView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +25,8 @@ import java.util.Set;
  * - Drag the header to place the column anywhere; the place is remembered
  *   (OverlaySettings). By default it sits at the left edge, between ATAK's zoom
  *   control and its scale bar.
- * - Size S, M or L from the panel; padding scales with the text, so a row is
- *   always a little taller than its text and sizes stay in proportion.
+ * - Size S, M or L from the panel, around ATAK's own map label size (M is the
+ *   same); padding scales with the text, so sizes stay in proportion.
  *
  * Drawn with ATAK's own map widgets in its root layout.
  */
@@ -248,19 +248,19 @@ final class FavouritesOverlay {
         return Math.max(0f, Math.min(y, max));
     }
 
+    /**
+     * ATAK's label format, offset by the chosen size. Not scaled for the
+     * screen here: MapTextFormat applies ATAK's own display scaling when it
+     * draws (GLRenderGlobals.getRelativeScaling). Scaling by density as well
+     * drew every size about 3.5 times too large on the Nexus (bench, 2026-10-03).
+     */
     private MapTextFormat format() {
-        DisplayMetrics dm = pluginContext.getResources().getDisplayMetrics();
-        int px = Math.round(settings.size().textSp * dm.scaledDensity);
-        return new MapTextFormat(Typeface.DEFAULT_BOLD, px);
+        return AtakMapView.getTextFormat(Typeface.DEFAULT_BOLD, settings.size().offset);
     }
 
-    /**
-     * Padding in proportion to the text. A fixed minimum row height was tried
-     * first and made every size too large on the bench: the widgets' own
-     * display scaling applied on top of it.
-     */
+    /** Padding in proportion to the text as drawn, so rows stay in proportion at every size. */
     private float padding(MapTextFormat format) {
-        return format.getFontSize() * 0.45f;
+        return format.getDensityAdjustedFontSize() * 0.45f;
     }
 
     private float density() {
