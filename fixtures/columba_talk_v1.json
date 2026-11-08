@@ -1,0 +1,187 @@
+{
+  "comment": "EXPERIMENTAL. Columba's talk snapshot, version 1 (docs/ColumbaInterface.md, 'Talk'): what ATAK's PTT panel shows of Columba's live talk. Copied byte for byte into Columba; Columba builds each snapshot from its talk state and must write exactly this, and the plugin parses each and checks the lines in 'expect'. Names and hashes are synthetic.",
+  "snapshots": [
+    {
+      "name": "talking-on-a-member-on-b",
+      "snapshot": {
+        "v": 1,
+        "available": true,
+        "running": true,
+        "mode": "live",
+        "status": "Relay · this phone",
+        "transmitting": true,
+        "remote": true,
+        "background": true,
+        "hint": null,
+        "keys": [
+          {
+            "key": "A",
+            "position": 3,
+            "label": "Search 1",
+            "room": "#search · 0a1b2c3d",
+            "phase": "talking",
+            "line": "Talk · 0:04/0:30 · 2/3",
+            "floor": "you",
+            "last": null
+          },
+          {
+            "key": "B",
+            "position": 1,
+            "label": "Kadikoy",
+            "room": null,
+            "phase": "idle",
+            "line": "RX · Member 2",
+            "floor": "Member 2",
+            "last": "Heard 2/2"
+          }
+        ]
+      },
+      "expect": {
+        "header": "Transmitting · Relay · this phone",
+        "note": null,
+        "keys": {
+          "A": {
+            "channel": "A3 Search 1 · #search · 0a1b2c3d",
+            "floor": "Floor: you",
+            "button": "Talk · 0:04/0:30 · 2/3",
+            "last": ""
+          },
+          "B": {
+            "channel": "B1 Kadikoy",
+            "floor": "Floor: Member 2",
+            "button": "RX · Member 2",
+            "last": "Heard 2/2"
+          }
+        }
+      }
+    },
+    {
+      "name": "no-talk-screen-opened",
+      "snapshot": {
+        "v": 1,
+        "available": false,
+        "running": false,
+        "mode": null,
+        "status": null,
+        "transmitting": false,
+        "remote": true,
+        "background": false,
+        "hint": "Talk off · open Talk in Columba",
+        "keys": []
+      },
+      "expect": {
+        "header": "Talk off · open Talk in Columba",
+        "note": null,
+        "keys": {}
+      }
+    },
+    {
+      "name": "background-refused-listening",
+      "snapshot": {
+        "v": 1,
+        "available": true,
+        "running": true,
+        "mode": "loopback",
+        "status": null,
+        "transmitting": false,
+        "remote": true,
+        "background": false,
+        "hint": "Background refused · open Columba once",
+        "keys": [
+          {
+            "key": "A",
+            "position": 1,
+            "label": "Command",
+            "room": null,
+            "phase": "idle",
+            "line": "Hold to talk",
+            "floor": null,
+            "last": null
+          },
+          {
+            "key": "B",
+            "position": 12,
+            "label": "Kartal",
+            "room": null,
+            "phase": "connecting",
+            "line": "Connecting…",
+            "floor": null,
+            "last": "No relay · not sent"
+          }
+        ]
+      },
+      "expect": {
+        "header": "Listening · loopback",
+        "note": "Background refused · open Columba once",
+        "keys": {
+          "A": {
+            "channel": "A1 Command",
+            "floor": "Floor free",
+            "button": "Hold to talk",
+            "last": ""
+          },
+          "B": {
+            "channel": "B12 Kartal",
+            "floor": "Floor free",
+            "button": "Connecting…",
+            "last": "No relay · not sent"
+          }
+        }
+      }
+    },
+    {
+      "name": "mock-not-live",
+      "snapshot": {
+        "v": 1,
+        "available": true,
+        "running": false,
+        "mode": "mock",
+        "status": null,
+        "transmitting": false,
+        "remote": false,
+        "background": false,
+        "hint": null,
+        "keys": [
+          {
+            "key": "A",
+            "position": 2,
+            "label": "Medical",
+            "room": null,
+            "phase": "idle",
+            "line": "Hold to talk",
+            "floor": null,
+            "last": null
+          },
+          {
+            "key": "B",
+            "position": 1,
+            "label": "Kadikoy",
+            "room": null,
+            "phase": "idle",
+            "line": "Hold to talk",
+            "floor": null,
+            "last": null
+          }
+        ]
+      },
+      "expect": {
+        "header": "Talk not live · mock",
+        "note": null,
+        "keys": {
+          "A": {
+            "channel": "A2 Medical",
+            "floor": "Floor free",
+            "button": "Hold to talk",
+            "last": ""
+          },
+          "B": {
+            "channel": "B1 Kadikoy",
+            "floor": "Floor free",
+            "button": "Hold to talk",
+            "last": ""
+          }
+        }
+      }
+    }
+  ]
+}

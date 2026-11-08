@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -14,6 +15,7 @@ import java.util.concurrent.Executors;
 
 import network.columba.app.mesh.IColumbaMesh;
 import network.columba.app.mesh.IColumbaMeshWatcher;
+import network.columba.app.mesh.IColumbaTalkWatcher;
 
 /**
  * The plugin's end of Columba's mesh interface (docs/ColumbaInterface.md).
@@ -49,8 +51,18 @@ public final class ColumbaMeshClient {
         void onResult(int code);
     }
 
+    /** EXPERIMENTAL: Columba's talk, pushed on every change while talk is wanted. */
+    public interface TalkListener {
+        void onTalk(TalkSnapshot talk);
+
+        /** talkWatch's answer: 0, or why Columba will not be driven (control off: view only). */
+        void onTalkWatch(int code);
+    }
+
     /** capabilities() bit: interface switching (ColumbaInterface.md, "Interfaces"). */
     public static final int CAP_INTERFACES = 1;
+    /** capabilities() bit: EXPERIMENTAL talk, ATAK's PTT panel (ColumbaInterface.md, "Talk"). */
+    public static final int CAP_TALK = 2;
     /** Local result: this Columba lacks the capability the call needs. Never sent by Columba. */
     public static final int NOT_SUPPORTED = -1;
     private static final int ERR_NOT_READY = 3;
@@ -81,6 +93,24 @@ public final class ColumbaMeshClient {
         }
     };
 
+    private TalkListener talkListener;
+    /** The PTT page is in view: Columba should keep talk on and push it here. */
+    private boolean talkWanted;
+    /** Columba holds talkWatcher now (as far as this side knows). */
+    private boolean talkWatching;
+
+    private final IColumbaTalkWatcher talkWatcher = new IColumbaTalkWatcher.Stub() {
+        @Override
+        public void changed(String talk) {
+            final TalkSnapshot parsed = TalkSnapshot.parse(talk);
+            final int posted = generation;
+            main.post(() -> {
+                if (posted == generation && talkListener != null && parsed != null)
+                    talkListener.onTalk(parsed);
+            });
+        }
+    };
+
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -99,6 +129,9 @@ public final class ColumbaMeshClient {
                 mesh = candidate;
                 deliver(State.CONNECTED, MeshSnapshot.parse(candidate.snapshot()));
                 candidate.watch(watcher);
+                // A Columba that came back (restarted, updated) has forgotten the watcher.
+                talkWatching = false;
+                main.post(ColumbaMeshClient.this::syncTalk);
             } catch (RemoteException e) {
                 mesh = null;
                 capabilities = 0;
@@ -163,6 +196,19 @@ public final class ColumbaMeshClient {
         mesh = null;
         capabilities = 0;
         if (current != null) {
+            if (talkWatching) {
+                // Off the main thread like every talk call; lets go of any key too (Columba side).
+                final IColumbaMesh going = current;
+                if (!commands.isShutdown()) {
+                    commands.execute(() -> {
+                        try {
+                            going.talkUnwatch(talkWatcher);
+                        } catch (RemoteException | RuntimeException ignored) {
+                        }
+                    });
+                }
+                talkWatching = false;
+            }
             try {
                 current.unwatch(watcher);
             } catch (RemoteException ignored) {
@@ -180,6 +226,54 @@ public final class ColumbaMeshClient {
     /** Whether the bound Columba offers [capability] (a CAP_ bit). */
     public boolean has(int capability) {
         return (capabilities & capability) == capability;
+    }
+
+    // ---- EXPERIMENTAL: talk (ColumbaInterface.md, "Talk"). Main thread in, main thread out.
+
+    public void setTalkListener(TalkListener listener) {
+        talkListener = listener;
+    }
+
+    /**
+     * Whether the PTT page is in view. While it is, Columba keeps its live talk on
+     * (with Columba behind ATAK) and pushes every change; when it is not, Columba
+     * goes back to running talk only behind its own talk screen.
+     */
+    public void setTalkWanted(boolean wanted) {
+        talkWanted = wanted;
+        syncTalk();
+    }
+
+    private void syncTalk() {
+        boolean want = talkWanted && mesh != null && has(CAP_TALK);
+        if (want == talkWatching)
+            return;
+        talkWatching = want;
+        if (want) {
+            command(CAP_TALK, m -> m.talkWatch(talkWatcher), code -> {
+                if (talkListener != null)
+                    talkListener.onTalkWatch(code);
+            });
+        } else {
+            command(CAP_TALK, m -> {
+                m.talkUnwatch(talkWatcher);
+                return 0;
+            }, code -> {
+            });
+        }
+    }
+
+    /**
+     * Key [key] (0 = A, 1 = B) down. [token] is a fresh binder held until the
+     * release: if ATAK's process dies with the key down, Columba sees the token
+     * die and lets go.
+     */
+    public void talkPress(int key, Binder token, Result result) {
+        command(CAP_TALK, m -> m.talkPress(key, token), result);
+    }
+
+    public void talkRelease(int key, Result result) {
+        command(CAP_TALK, m -> m.talkRelease(key), result);
     }
 
     /** Ask Columba to announce this node. Off the main thread: it can take seconds. */

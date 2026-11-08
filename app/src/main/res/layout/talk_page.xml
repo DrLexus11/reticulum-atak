@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EXPERIMENTAL. The PTT page: Columba's status, the A/B selector, the
+     selected key's channel, the floor, the last result, and one big
+     hold-to-talk button filling the rest. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="6dp">
+
+    <TextView
+        android:id="@+id/talk_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:maxLines="2"
+        android:text="@string/pane_empty" />
+
+    <TextView
+        android:id="@+id/talk_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFB000"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/talk_control"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFB000"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/talk_key_a"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="48dp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:text="@string/talk_key_a" />
+
+        <Button
+            android:id="@+id/talk_key_b"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="48dp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:text="@string/talk_key_b" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/talk_channel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textStyle="bold"
+        android:singleLine="true"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/talk_floor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/talk_last"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:ellipsize="end" />
+
+    <Button
+        android:id="@+id/talk_ptt"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="6dp"
+        android:minHeight="120dp"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFFFF"
+        android:textAllCaps="false"
+        android:contentDescription="@string/talk_ptt_description"
+        android:text="@string/talk_ptt" />
+</LinearLayout>

@@ -32,6 +32,18 @@
             android:textStyle="bold"
             android:background="?android:attr/selectableItemBackground"
             android:text="@string/tab_interfaces" />
+
+        <!-- EXPERIMENTAL: the PTT remote for Columba's talk (TalkPage). -->
+        <TextView
+            android:id="@+id/tab_talk"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:background="?android:attr/selectableItemBackground"
+            android:text="@string/tab_talk"
+            android:visibility="gone" />
     </LinearLayout>
 
     <androidx.viewpager.widget.ViewPager
