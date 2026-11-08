@@ -269,3 +269,119 @@ this phone (about 5 s); links drop and rebuild."
 a staged case with an interface carrying the command post's path, one configured
 but not running, and a live case. Both sides test against it, as for
 `columba_mesh_v1.json`.
+
+# Talk: an additive capability -- EXPERIMENTAL, 2026-11-08
+
+**Experimental.** A bench trial of ATAK's PTT panel as a remote for Columba's
+live talk. It lives on the `exp/ptt-panel` branch here and
+`exp/atak-ptt-remote` in Columba, and is not merged before the demo. If the
+bench says it works, this section is reviewed like any other before it lands;
+if not, it is dropped with the branches.
+
+Additive, as "Interfaces" is: `version()` stays 1, the methods are appended
+after `applyInterfaces()`, and the plugin checks capability bit **2** before
+every talk call (`ColumbaMeshClient.command`). A Columba without the bit hides
+the Talk tab.
+
+## Methods
+
+```aidl
+    // appended after applyInterfaces():
+    String talkState();
+    int talkWatch(IColumbaTalkWatcher watcher);
+    void talkUnwatch(IColumbaTalkWatcher watcher);
+    int talkPress(int key, IBinder token);   // key: 0 = A, 1 = B
+    int talkRelease(int key);
+
+interface IColumbaTalkWatcher {
+    oneway void changed(String talk);
+}
+```
+
+- **The watcher is the claim.** While a talk watcher is registered and "allow
+  ATAK control" is on, Columba keeps its live talk running with its own talk
+  screen gone -- listening and transmitting, microphone included -- and pushes
+  the talk snapshot on every change (a key's elapsed time ticks once a second
+  while talking). With no watcher, Columba runs talk only behind its own talk
+  screen, as before. The plugin watches while its Talk page is in view (pane
+  open, Talk tab current) and unwatches otherwise. Columba keeps talk on for
+  5 s after the last watcher goes, so flicking between tabs does not restart it.
+- **Control off.** `talkWatch` still registers (the page can show the state)
+  but returns `2 ERR_CONTROL_OFF`, and Columba does not keep talk on for it.
+  `talkPress` is refused with the same code.
+- **Letting go is never refused** for control: `talkRelease` answers every
+  allowed caller. Only `1 ERR_CALLER` applies to it.
+- **A stuck open floor is the worst failure**, so Columba lets go of a key
+  the remote holds when: the press's `token` dies (a fresh `Binder` per press,
+  linked to death in Columba: ATAK's process went); the key has been held for
+  35 s whatever the remote says (the talk limit, 30 s, already ends the
+  transmission; this is the backstop for a lost release); the watcher dies or
+  unwatches; the binding ends; control is switched off. Releasing a key the
+  remote did not hold is harmless.
+- New codes: `8 ERR_TALK_OFF` -- no talk to drive (Columba's talk screen has
+  not been opened since Columba started, so there is no talk state yet);
+  `9 ERR_INVALID` -- no such key, or a press without a token.
+
+## Talk snapshot, version 1
+
+```json
+{
+  "v": 1,
+  "available": true,
+  "running": true,
+  "mode": "live",
+  "status": "Relay · this phone",
+  "transmitting": true,
+  "remote": true,
+  "background": true,
+  "hint": null,
+  "keys": [
+    {
+      "key": "A",
+      "position": 3,
+      "label": "<channel label>",
+      "room": "#<room> · <hub, 8 hex>",
+      "phase": "talking",
+      "line": "Talk · 0:04/0:30 · 2/3",
+      "floor": "you",
+      "last": null
+    }
+  ]
+}
+```
+
+- `available`: Columba has talk state to drive. `running`: live voice is on
+  (lxpt or loopback), not the mock and not stopped.
+- `status`: Columba's own line for where this phone stands with a relay
+  ("Relay · this phone", "No relay · looking", ...). `mode`: `live`,
+  `loopback`, `mock`.
+- `remote`: Columba counts a remote as in use. `background`: Columba holds
+  its microphone foreground service, so talk stays on behind ATAK on any
+  Android version. `hint`: Columba's warning, one line, or null -- "Talk off ·
+  open Talk in Columba", "Background refused · open Columba once".
+- Per key: the selector `position` and the channel it selects (`label`, and
+  `room` when bound to a Groups room); `phase` (`idle`, `calling`,
+  `connecting`, `ready`, `talking`, `same_as`, `refused`); `line`, what the
+  key says on Columba's talk screen; `floor`, who has the floor on that
+  channel (`you`, a member's name, or null when free); `last`, how the key's
+  latest key-up ended.
+
+The lines are Columba's words; the plugin shows them and guesses nothing.
+
+## Android's microphone rules
+
+Columba's talk runs in its app process. Android 8.1 lets a background app use
+the microphone; Android 11+ needs a foreground service of type microphone, and
+Android 12+ lets an app start one only while it is allowed to (in front, or
+just left). Columba starts one (`TalkRemoteService`) while a remote is in use;
+when Android refuses -- Columba was behind ATAK when the Talk page opened --
+the snapshot says `background: false` with the "Background refused" hint, and
+Columba tries again the next time it comes to the front. Bench-tested only on
+Android 8.1 so far.
+
+## Fixture
+
+`fixtures/columba_talk_v1.json`: talking on one key with a member on the
+other, no talk yet, background refused while connecting, and the mock. Columba
+builds each from its talk state and must write the snapshot exactly; the
+plugin parses each and checks the lines in `expect`.
