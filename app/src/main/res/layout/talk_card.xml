@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- EXPERIMENTAL. One key's column above its PTT key: selector position, channel,
-     room, who has the floor, and the last result -- one short line each. -->
+     room, who has the floor, and the last result, one short line each. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
