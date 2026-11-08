@@ -21,9 +21,6 @@
     <string name="iface_apply_message">Restarts the mesh on this phone (about 5 s); links drop and rebuild.</string>
     <string name="cancel">Cancel</string>
     <string name="tab_talk">Talk</string>
-    <string name="talk_key_a">A</string>
-    <string name="talk_key_b">B</string>
-    <string name="talk_ptt">PTT</string>
-    <string name="talk_ptt_description">Push to talk: hold to transmit on the selected key</string>
+    <string name="talk_open_columba">Open Talk in Columba</string>
     <string name="talk_control_off">ATAK control off in Columba: view only</string>
 </resources>

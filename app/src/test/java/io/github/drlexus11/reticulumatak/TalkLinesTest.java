@@ -52,7 +52,7 @@ public class TalkLinesTest {
 
     @Test
     public void phasesSayWhetherTheKeyIsOnAir() throws Exception {
-        TalkSnapshot t = TalkSnapshot.parse(cases().getJSONObject(0).getJSONObject("snapshot").toString());
+        TalkSnapshot t = fixture(0);
         assertTrue(t.key("A").talking());
         assertFalse(t.key("B").talking());
         assertFalse(t.key("B").waiting());
@@ -66,6 +66,42 @@ public class TalkLinesTest {
         assertNull(TalkSnapshot.parse(""));
         assertNull(TalkSnapshot.parse("{\"v\":2,\"keys\":[]}"));
         assertNull(TalkSnapshot.parse("not json"));
+    }
+
+    private static TalkSnapshot fixture(int i) throws Exception {
+        return TalkSnapshot.parse(cases().getJSONObject(i).getJSONObject("snapshot").toString());
+    }
+
+    @Test
+    public void theBannerSaysTheStateFirst() throws Exception {
+        assertEquals("TRANSMITTING", TalkLines.title(fixture(0)));
+        assertEquals("Relay · this phone", TalkLines.subtitle(fixture(0)));
+        assertEquals("TALK OFF", TalkLines.title(fixture(1)));
+        assertEquals("LISTENING", TalkLines.title(fixture(2)));
+        assertEquals("loopback", TalkLines.subtitle(fixture(2)));
+        assertEquals("VOICE: MOCK", TalkLines.title(fixture(3)));
+    }
+
+    @Test
+    public void openColumbaIsOfferedWhenTalkIsOffOrRefusedBehindAtak() throws Exception {
+        assertFalse(TalkLines.offerOpen(fixture(0)));
+        assertTrue(TalkLines.offerOpen(fixture(1)));   // no talk yet
+        assertTrue(TalkLines.offerOpen(fixture(2)));   // background refused
+        assertFalse(TalkLines.offerOpen(fixture(3)));  // the mock, on purpose
+    }
+
+    @Test
+    public void keysTakeColumbasStates() throws Exception {
+        TalkSnapshot talking = fixture(0);
+        assertEquals(TalkLines.Style.TALKING, TalkLines.style(talking.key("A")));
+        assertEquals(TalkLines.Style.RECEIVING, TalkLines.style(talking.key("B")));
+        TalkSnapshot refused = fixture(2);
+        assertEquals(TalkLines.Style.IDLE, TalkLines.style(refused.key("A")));
+        assertEquals(TalkLines.Style.CALLING, TalkLines.style(refused.key("B")));
+        assertEquals("A03", TalkLines.position(talking.key("A")));
+        assertEquals("B12", TalkLines.position(refused.key("B")));
+        assertEquals("No room", TalkLines.room(talking.key("B")));
+        assertEquals("Push to talk A, Search 1, Talk · 0:04/0:30 · 2/3", TalkLines.keyDescription(talking.key("A")));
     }
 
     @Test

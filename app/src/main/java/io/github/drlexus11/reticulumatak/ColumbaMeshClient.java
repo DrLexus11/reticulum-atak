@@ -76,6 +76,8 @@ public final class ColumbaMeshClient {
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService commands = Executors.newSingleThreadExecutor();
     private IColumbaMesh mesh;
+    /** The Columba package this client is bound to; null until connected. */
+    private volatile String boundPackage;
     /** What the bound Columba can do beyond v1; 0 until it says, or when unbound. */
     private volatile int capabilities;
     private boolean bound;
@@ -114,6 +116,7 @@ public final class ColumbaMeshClient {
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            boundPackage = name.getPackageName();
             IColumbaMesh candidate = IColumbaMesh.Stub.asInterface(service);
             try {
                 int version = candidate.version();
@@ -221,6 +224,11 @@ public final class ColumbaMeshClient {
             } catch (IllegalArgumentException ignored) {
             }
         }
+    }
+
+    /** The package of the Columba this client is bound to (release or debug); null before the first connection. */
+    public String boundPackage() {
+        return boundPackage;
     }
 
     /** Whether the bound Columba offers [capability] (a CAP_ bit). */

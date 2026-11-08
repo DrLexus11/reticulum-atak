@@ -43,6 +43,62 @@ final class TalkLines {
         return k.last != null ? k.last : "";
     }
 
+    /** The banner's first line, state first, in capitals as Columba's banner reads at arm's length. */
+    static String title(TalkSnapshot t) {
+        if (!t.available)
+            return "TALK OFF";
+        if (!t.running)
+            return "mock".equals(t.mode) ? "VOICE: MOCK" : "TALK OFF";
+        return t.transmitting ? "TRANSMITTING" : "LISTENING";
+    }
+
+    /** The banner's second line: where this phone stands with a relay, and the mode when not live. */
+    static String subtitle(TalkSnapshot t) {
+        if (!t.available)
+            return "Not started in Columba";
+        if (!t.running)
+            return "mock".equals(t.mode) ? "Not transmitted" : "Starting, or off in Columba";
+        StringBuilder line = new StringBuilder(t.status != null ? t.status : "");
+        if (t.mode != null && !"live".equals(t.mode))
+            line.append(line.length() > 0 ? " · " : "").append(t.mode);
+        return line.toString();
+    }
+
+    /**
+     * Whether to offer "Open Talk in Columba": talk is off, or Android refused to
+     * keep it on behind ATAK. Opening Columba's talk screen fixes both.
+     */
+    static boolean offerOpen(TalkSnapshot t) {
+        return !t.available || (!t.running && !"mock".equals(t.mode)) || (t.remote && !t.background && t.hint != null);
+    }
+
+    /** "A03": the key and its selector position, as Columba's dial shows it. */
+    static String position(TalkSnapshot.Key k) {
+        return String.format(java.util.Locale.ROOT, "%s%02d", k.key, k.position);
+    }
+
+    static String room(TalkSnapshot.Key k) {
+        return k.room != null ? k.room : "No room";
+    }
+
+    /** A key's look, from its phase: the same states Columba's key colours. */
+    enum Style { IDLE, RECEIVING, CALLING, TALKING, REFUSED }
+
+    static Style style(TalkSnapshot.Key k) {
+        if (k.talking())
+            return Style.TALKING;
+        if (k.waiting() || "same_as".equals(k.phase))
+            return Style.CALLING;
+        if ("refused".equals(k.phase))
+            return Style.REFUSED;
+        return k.floor != null ? Style.RECEIVING : Style.IDLE;
+    }
+
+    /** What a screen reader says for a key: the key, its channel and its state. */
+    static String keyDescription(TalkSnapshot.Key k) {
+        return "Push to talk " + k.key + ", " + k.label + ", " + k.line;
+    }
+
     /** What a result code from a talk command says, one line. */
     static String result(int code) {
         switch (code) {
