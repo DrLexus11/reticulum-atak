@@ -49,6 +49,15 @@ Still wanted from the first roadmap: **delivery state** (did it arrive, per
 message and file), **queues** (who it is waiting for, and why), **cost before
 fetching** (a file's size against the route's measured rate).
 
+## Standalone -- proposed 2026-11-08
+
+The operator set the direction on 2026-11-08: the plugin runs its own stack,
+with Python inside it as Columba does, and no Columba dependency. PTT parity
+comes first, then ATAK group chat over RRC. The design, the phases and their
+gates, and the open decisions are in `Standalone.md`. The phases start after
+the demo, once those decisions are made. Feature 6 below (team rooms over RRC)
+moves into its phase 2.
+
 ## Order of work
 
 **PR F, before Outdoor Test 1:**
