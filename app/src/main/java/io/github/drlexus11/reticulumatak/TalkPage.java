@@ -61,9 +61,8 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
         final TextView room;
         final TextView floor;
         final TextView last;
-        boolean held;
-        /** Kept from the press until its release is sent: Columba watches it for ATAK's death. */
-        Binder token;
+        /** The press in flight; its Binder is kept until the release is answered: Columba watches it for ATAK's death. */
+        final KeyHold<Binder> hold = new KeyHold<>();
 
         Key(int index, View card, View key) {
             this.index = index;
@@ -175,10 +174,8 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
         boolean now = state == ColumbaMeshClient.State.CONNECTED;
         if (connected && !now) {
             // Columba went away: whatever it held for us, it let go of with the binding.
-            for (Key k : keys) {
-                k.held = false;
-                k.token = null;
-            }
+            for (Key k : keys)
+                k.hold.forget();
             talk = null;
         }
         connected = now;
@@ -198,17 +195,15 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
     }
 
     private void press(Key k) {
-        if (k.held || !canPress())
+        if (k.hold.held() || !canPress())
             return;
-        k.held = true;
-        k.token = new Binder();
+        final Binder token = new Binder();
+        k.hold.press(token);
         final int index = k.index;
-        session.client().talkPress(index, k.token, code -> {
+        session.client().talkPress(index, token, code -> {
             if (code != 0) {
-                if (k.held) {
-                    k.held = false;
-                    k.token = null;
-                }
+                // Only this press: a newer one on the key must keep its token and its release.
+                k.hold.failed(token);
                 PeerActions.say(pluginContext, "PTT " + NAMES[index] + ": " + TalkLines.result(code));
             }
             render();
@@ -217,12 +212,10 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
     }
 
     private void letGo(Key k) {
-        if (!k.held)
-            return;
-        k.held = false;
         // The token is dropped only once the release is answered: it must outlive the press.
-        final Binder keep = k.token;
-        k.token = null;
+        final Binder keep = k.hold.release();
+        if (keep == null)
+            return;
         session.client().talkRelease(k.index, code -> {
             if (keep != null)
                 render();
@@ -314,7 +307,7 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
         k.floor.setText(TalkLines.floor(state));
         k.last.setText(TalkLines.last(state));
         k.line.setText(state.line);
-        paint(k, TalkLines.style(state), canPress() || k.held);
+        paint(k, TalkLines.style(state), canPress() || k.hold.held());
         k.key.setContentDescription(TalkLines.keyDescription(state));
     }
 
