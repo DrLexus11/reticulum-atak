@@ -253,7 +253,8 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
     private boolean canPress() {
         // Live talk running, or the mock on purpose: a press while live talk is
         // still starting would reach the mock's controller, not the air.
-        return supported() && talk != null && talk.available
+        // Not with the microphone blocked either: the floor would open with dead air.
+        return supported() && talk != null && talk.available && !talk.micBlocked
                 && (talk.running || "mock".equals(talk.mode));
     }
 

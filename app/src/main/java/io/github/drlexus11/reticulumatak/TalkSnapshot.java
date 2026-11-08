@@ -64,11 +64,17 @@ public final class TalkSnapshot {
     public final boolean remote;
     /** Columba holds talk on in the background (its microphone foreground service runs). */
     public final boolean background;
+    /**
+     * Android silenced Columba's microphone (service refused, Columba behind ATAK):
+     * Columba refuses presses until it is opened. Absent from older snapshots: false.
+     */
+    public final boolean micBlocked;
     public final String hint;
     public final List<Key> keys;
 
     private TalkSnapshot(boolean available, boolean running, String mode, String status,
-            boolean transmitting, boolean remote, boolean background, String hint, List<Key> keys) {
+            boolean transmitting, boolean remote, boolean background, boolean micBlocked, String hint,
+            List<Key> keys) {
         this.available = available;
         this.running = running;
         this.mode = mode;
@@ -76,6 +82,7 @@ public final class TalkSnapshot {
         this.transmitting = transmitting;
         this.remote = remote;
         this.background = background;
+        this.micBlocked = micBlocked;
         this.hint = hint;
         this.keys = Collections.unmodifiableList(keys);
     }
@@ -107,7 +114,8 @@ public final class TalkSnapshot {
             }
             return new TalkSnapshot(root.getBoolean("available"), root.getBoolean("running"),
                     string(root, "mode"), string(root, "status"), root.getBoolean("transmitting"),
-                    root.getBoolean("remote"), root.getBoolean("background"), string(root, "hint"), keys);
+                    root.getBoolean("remote"), root.getBoolean("background"),
+                    root.optBoolean("mic_blocked", false), string(root, "hint"), keys);
         } catch (JSONException e) {
             return null;
         }

@@ -12,6 +12,7 @@
         "transmitting": true,
         "remote": true,
         "background": true,
+        "mic_blocked": false,
         "hint": null,
         "keys": [
           {
@@ -66,6 +67,7 @@
         "transmitting": false,
         "remote": true,
         "background": false,
+        "mic_blocked": false,
         "hint": "Talk off · open Talk in Columba",
         "keys": []
       },
@@ -86,6 +88,7 @@
         "transmitting": false,
         "remote": true,
         "background": false,
+        "mic_blocked": false,
         "hint": "Background refused · open Columba once",
         "keys": [
           {
@@ -140,6 +143,7 @@
         "transmitting": false,
         "remote": false,
         "background": false,
+        "mic_blocked": false,
         "hint": null,
         "keys": [
           {
@@ -179,6 +183,61 @@
             "floor": "Floor free",
             "button": "Hold to talk",
             "last": ""
+          }
+        }
+      }
+    },
+    {
+      "name": "mic-blocked-behind-atak",
+      "snapshot": {
+        "v": 1,
+        "available": true,
+        "running": true,
+        "mode": "loopback",
+        "status": null,
+        "transmitting": false,
+        "remote": true,
+        "background": false,
+        "mic_blocked": true,
+        "hint": "Mic blocked · open Columba",
+        "keys": [
+          {
+            "key": "A",
+            "position": 1,
+            "label": "Command",
+            "room": null,
+            "phase": "idle",
+            "line": "Hold to talk",
+            "floor": null,
+            "last": null
+          },
+          {
+            "key": "B",
+            "position": 12,
+            "label": "Kartal",
+            "room": null,
+            "phase": "connecting",
+            "line": "Connecting…",
+            "floor": null,
+            "last": "No relay · not sent"
+          }
+        ]
+      },
+      "expect": {
+        "header": "Listening · loopback",
+        "note": "Mic blocked · open Columba",
+        "keys": {
+          "A": {
+            "channel": "A1 Command",
+            "floor": "Floor free",
+            "button": "Hold to talk",
+            "last": ""
+          },
+          "B": {
+            "channel": "B12 Kartal",
+            "floor": "Floor free",
+            "button": "Connecting…",
+            "last": "No relay · not sent"
           }
         }
       }

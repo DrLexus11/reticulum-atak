@@ -320,7 +320,10 @@ interface IColumbaTalkWatcher {
   remote did not hold is harmless.
 - New codes: `8 ERR_TALK_OFF` -- no talk to drive (Columba's talk screen has
   not been opened since Columba started, so there is no talk state yet);
-  `9 ERR_INVALID` -- no such key, or a press without a token.
+  `9 ERR_INVALID` -- no such key, or a press without a token;
+  `10 ERR_MIC_BLOCKED` -- Android refused Columba's microphone service and
+  Columba is not in front, so its microphone is silenced: a press would open
+  the floor with dead air, and is refused.
 
 ## Talk snapshot, version 1
 
@@ -334,6 +337,7 @@ interface IColumbaTalkWatcher {
   "transmitting": true,
   "remote": true,
   "background": true,
+  "mic_blocked": false,
   "hint": null,
   "keys": [
     {
@@ -357,8 +361,11 @@ interface IColumbaTalkWatcher {
   `loopback`, `mock`.
 - `remote`: Columba counts a remote as in use. `background`: Columba holds
   its microphone foreground service, so talk stays on behind ATAK on any
-  Android version. `hint`: Columba's warning, one line, or null -- "Talk off ·
-  open Talk in Columba", "Background refused · open Columba once".
+  Android version. `mic_blocked`: the microphone is silenced (see
+  `ERR_MIC_BLOCKED`); absent from the first experimental builds, read as
+  false. `hint`: Columba's warning, one line, or null -- "Talk off · open Talk
+  in Columba", "Mic blocked · open Columba", "Background refused · open
+  Columba once".
 - Per key: the selector `position` and the channel it selects (`label`, and
   `room` when bound to a Groups room); `phase` (`idle`, `calling`,
   `connecting`, `ready`, `talking`, `same_as`, `refused`); `line`, what the
@@ -373,11 +380,22 @@ The lines are Columba's words; the plugin shows them and guesses nothing.
 Columba's talk runs in its app process. Android 8.1 lets a background app use
 the microphone; Android 11+ needs a foreground service of type microphone, and
 Android 12+ lets an app start one only while it is allowed to (in front, or
-just left). Columba starts one (`TalkRemoteService`) while a remote is in use;
-when Android refuses -- Columba was behind ATAK when the Talk page opened --
-the snapshot says `background: false` with the "Background refused" hint, and
-Columba tries again the next time it comes to the front. Bench-tested only on
-Android 8.1 so far.
+just left). Columba starts one (`TalkRemoteService`) with live talk, while its
+talk screen is visible, so the same service keeps talk on through a screen lock.
+When Android refuses -- live talk was started for the remote with Columba
+behind ATAK -- the snapshot says `background: false` with the "Background
+refused" hint; with Columba also behind, `mic_blocked: true`, "Mic blocked ·
+open Columba", and presses are refused. Columba tries again the next time it
+comes to the front, which the Talk tab's "Open Talk in Columba" does.
+Bench-tested only on Android 8.1 so far.
+
+## Opening Columba's talk from ATAK
+
+With talk off, or the microphone blocked, the Talk tab offers one button. It
+starts Columba's `network.columba.app.MainActivity` in the bound package with
+the action `network.columba.app.ACTION_OPEN_TALK` and no extras. Columba opens
+its talk screen, which starts talk -- and, being in front, its microphone
+service; the user returns to ATAK with Home or Recents.
 
 ## Fixture
 

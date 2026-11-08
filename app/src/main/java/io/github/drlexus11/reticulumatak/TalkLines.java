@@ -69,7 +69,8 @@ final class TalkLines {
      * keep it on behind ATAK. Opening Columba's talk screen fixes both.
      */
     static boolean offerOpen(TalkSnapshot t) {
-        return !t.available || (!t.running && !"mock".equals(t.mode)) || (t.remote && !t.background && t.hint != null);
+        return !t.available || (!t.running && !"mock".equals(t.mode)) || t.micBlocked
+                || (t.remote && !t.background && t.hint != null);
     }
 
     /** "A03": the key and its selector position, as Columba's dial shows it. */
@@ -114,6 +115,8 @@ final class TalkLines {
                 return "Talk off · open Talk in Columba";
             case 9:
                 return "Refused: bad request";
+            case 10:
+                return "Mic blocked · open Columba";
             case ColumbaMeshClient.NOT_SUPPORTED:
                 return "This Columba has no talk";
             default:

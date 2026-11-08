@@ -88,6 +88,17 @@ public class TalkLinesTest {
         assertTrue(TalkLines.offerOpen(fixture(1)));   // no talk yet
         assertTrue(TalkLines.offerOpen(fixture(2)));   // background refused
         assertFalse(TalkLines.offerOpen(fixture(3)));  // the mock, on purpose
+        assertTrue(TalkLines.offerOpen(fixture(4)));   // microphone blocked
+    }
+
+    @Test
+    public void aBlockedMicrophoneIsSaidAndOlderSnapshotsAreNotBlocked() throws Exception {
+        assertTrue(fixture(4).micBlocked);
+        assertEquals("Mic blocked · open Columba", TalkLines.note(fixture(4)));
+        assertEquals("Mic blocked · open Columba", TalkLines.result(10));
+        assertFalse(TalkSnapshot.parse("{\"v\":1,\"available\":true,\"running\":true,\"mode\":\"live\","
+                + "\"status\":null,\"transmitting\":false,\"remote\":false,\"background\":false,"
+                + "\"hint\":null,\"keys\":[]}").micBlocked);
     }
 
     @Test
