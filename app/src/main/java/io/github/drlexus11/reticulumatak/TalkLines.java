@@ -13,7 +13,7 @@ final class TalkLines {
         if (!t.available)
             return t.hint != null ? t.hint : "Talk off in Columba";
         if (!t.running)
-            return "Talk not live" + (t.mode != null ? " · " + t.mode : "");
+            return "mock".equals(t.mode) ? "Talk not live · mock" : "Talk not running · starting or off";
         StringBuilder line = new StringBuilder(t.transmitting ? "Transmitting" : "Listening");
         if (t.status != null)
             line.append(" · ").append(t.status);
