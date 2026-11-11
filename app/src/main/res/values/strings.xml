@@ -25,5 +25,5 @@
     <string name="talk_control_off">ATAK control off in Columba: view only</string>
     <string name="talk_prev">◀</string>
     <string name="talk_next">▶</string>
-    <string name="talk_channels">Channel</string>
+    <string name="talk_channels">☰</string>
 </resources>

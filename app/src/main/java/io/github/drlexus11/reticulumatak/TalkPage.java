@@ -380,7 +380,9 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
             b.setEnabled(turnable);
             b.setAlpha(turnable ? 1f : 0.45f);
         }
-        k.list.setText(state.locked ? "On device" : pluginContext.getString(R.string.talk_channels));
+        // Locked by a PTT device: the list says so in its description; the glyph stays one line.
+        k.list.setContentDescription(state.locked ? "Channel list " + NAMES[k.index] + ", selector on PTT device"
+                : "Channel list " + NAMES[k.index]);
         paint(k, TalkLines.style(state), canPress() || k.hold.held());
         k.key.setContentDescription(TalkLines.keyDescription(state));
     }

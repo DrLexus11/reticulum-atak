@@ -82,6 +82,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:minHeight="56dp"
+            android:singleLine="true"
             android:textSize="22sp"
             android:textStyle="bold"
             android:text="@string/talk_prev" />
@@ -90,13 +91,13 @@
             android:id="@+id/card_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1.4"
+            android:layout_weight="1"
             android:layout_marginStart="4dp"
             android:layout_marginEnd="4dp"
             android:minHeight="56dp"
-            android:textSize="18sp"
+            android:singleLine="true"
+            android:textSize="22sp"
             android:textStyle="bold"
-            android:textAllCaps="false"
             android:text="@string/talk_channels" />
 
         <Button
@@ -105,6 +106,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:minHeight="56dp"
+            android:singleLine="true"
             android:textSize="22sp"
             android:textStyle="bold"
             android:text="@string/talk_next" />
