@@ -375,6 +375,38 @@ interface IColumbaTalkWatcher {
 
 The lines are Columba's words; the plugin shows them and guesses nothing.
 
+## Selecting a channel -- capability bit 4, 2026-11-11
+
+Asked by the operator on 2026-11-11 ("it would have been better if we could
+switch channels on ATAK"). Additive like the rest: a Columba with bit 2 and
+without bit 4 still drives PTT, and the page hides its selector controls.
+
+```aidl
+    // appended after talkRelease():
+    int talkSelect(int key, int position);   // key: 0 = A, 1 = B; position 1..12
+```
+
+- **It turns Columba's own selector.** The effect is exactly a turn on
+  Columba's talk screen: the snapshot's `position`, `label` and `room` follow,
+  and live talk listens on the new channel. Columba's selector rules apply:
+  positions wrap 12 -> 1; in a shared bank both keys index one list; a key held
+  keeps the channel it keyed, and only its next press uses the new one.
+- **Gated like every command:** `2 ERR_CONTROL_OFF` while "allow ATAK control"
+  is off, logged in Columba with the caller. Live talk need not be running: a
+  channel can be chosen while talk starts.
+- New code: `11 ERR_SELECTOR_LOCKED` -- the selectors are a PTT device's
+  (absolute encoders), and only the device turns them. `8 ERR_TALK_OFF` when
+  Columba has no talk yet; `9 ERR_INVALID` for a key or a position out of range.
+- **Snapshot fields, per key, additive to version 1:** `locked` (the selectors
+  are a device's) and `channels`, the 12 channels the key's selector indexes,
+  positions 1..12 in order, each `{"label": ..., "room": ... | null}` in
+  Columba's words. A snapshot without them is read as unlocked with no list,
+  which offers no selector.
+- **The page:** under each key's column, a step down, the channel list and a
+  step up, each at least 56 dp for gloves. The list is ATAK's single-choice
+  dialog with the current position ticked; a tap selects and closes. A refusal
+  is one line, state first: `Not switched · PTT A · Selector on PTT device`.
+
 ## Android's microphone rules
 
 Columba's talk runs in its app process. Android 8.1 lets a background app use
@@ -400,6 +432,9 @@ service; the user returns to ATAK with Home or Recents.
 ## Fixture
 
 `fixtures/columba_talk_v1.json`: talking on one key with a member on the
-other, no talk yet, background refused while connecting, and the mock. Columba
+other, no talk yet, background refused while connecting, the mock, the
+microphone blocked, and (bit 4) a shared bank with the selectors on a device.
+Each key carries its channel list; `expect` adds whether the selector can be
+turned and the list rows at, before and after its position. Columba
 builds each from its talk state and must write the snapshot exactly; the
 plugin parses each and checks the lines in `expect`.

@@ -35,6 +35,16 @@ user (messages go through ATAK's GeoChat, as today), deleting, identity
 operations. (First decided read-only; the features agreed the same day need
 the four commands.)
 
+**Amended 2026-11-11: talk.** The list gains the talk remote's commands,
+behind the same setting and log: key and release a PTT key (bench-tested
+11-08 as an experiment, on the demo build since 11-11), and **switch a talk
+channel** -- turn a PTT key's selector to one of its 12 positions, as on
+Columba's own talk screen (the operator, 11-11: "it would have been better if
+we could switch channels on ATAK"). Releasing a key is never refused for the
+setting: letting go is always allowed. A switch is refused while a hardware
+PTT device holds the selectors. Talk audio stays in Columba; the plugin never
+sends voice. Details: `ColumbaInterface.md`, "Talk".
+
 **Interface switching, how it applies** (found 2026-10-03): Columba's Kotlin
 backend switches interfaces live; its Python backend cannot -- upstream RNS
 reads interfaces only at start -- so there a switch is staged and applied by an

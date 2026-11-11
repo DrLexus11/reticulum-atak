@@ -46,6 +46,11 @@ public class TalkLinesTest {
                 assertEquals(name + " " + key, k.getString("floor"), TalkLines.floor(parsed));
                 assertEquals(name + " " + key, k.getString("button"), parsed.line);
                 assertEquals(name + " " + key, k.getString("last"), TalkLines.last(parsed));
+                assertEquals(name + " " + key, k.getBoolean("selectable"), TalkLines.selectable(parsed));
+                assertEquals(name + " " + key, 12, parsed.channels.size());
+                assertEquals(name + " " + key, k.getString("picked"), TalkLines.option(parsed, parsed.position));
+                assertEquals(name + " " + key, k.getString("prev"), TalkLines.option(parsed, TalkLines.step(parsed, -1)));
+                assertEquals(name + " " + key, k.getString("next"), TalkLines.option(parsed, TalkLines.step(parsed, 1)));
             }
         }
     }
@@ -120,5 +125,39 @@ public class TalkLinesTest {
         assertEquals("ATAK control off in Columba", TalkLines.result(2));
         assertEquals("Talk off · open Talk in Columba", TalkLines.result(8));
         assertEquals("This Columba has no talk", TalkLines.result(ColumbaMeshClient.NOT_SUPPORTED));
+    }
+
+    @Test
+    public void theSelectorWrapsRoundAsColumbasEncoderDoes() throws Exception {
+        TalkSnapshot refused = fixture(2);
+        TalkSnapshot.Key b = refused.key("B");      // B12
+        assertEquals(1, TalkLines.step(b, 1));
+        assertEquals(11, TalkLines.step(b, -1));
+        TalkSnapshot.Key a = refused.key("A");      // A1
+        assertEquals(12, TalkLines.step(a, -1));
+        assertEquals(3, TalkLines.step(a, 2));
+        assertEquals(12, TalkLines.options(a).length);
+        assertEquals("01 Command", TalkLines.options(a)[0]);
+    }
+
+    @Test
+    public void aSnapshotWithoutChannelsOffersNoSelector() {
+        TalkSnapshot old = TalkSnapshot.parse("{\"v\":1,\"available\":true,\"running\":true,\"mode\":\"live\","
+                + "\"status\":null,\"transmitting\":false,\"remote\":false,\"background\":false,\"hint\":null,"
+                + "\"keys\":[{\"key\":\"A\",\"position\":2,\"label\":\"Medical\",\"room\":null,\"phase\":\"idle\","
+                + "\"line\":\"Hold to talk\",\"floor\":null,\"last\":null}]}");
+        assertNotNull(old);
+        assertFalse(old.key("A").locked);
+        assertTrue(old.key("A").channels.isEmpty());
+        assertFalse(TalkLines.selectable(old.key("A")));
+    }
+
+    @Test
+    public void aDeviceHeldSelectorIsSaid() throws Exception {
+        TalkSnapshot shared = fixture(5);
+        assertTrue(shared.key("A").locked);
+        assertEquals("Selector on PTT device", TalkLines.result(11));
+        // A shared bank: both keys list the same channels.
+        assertEquals(TalkLines.option(shared.key("A"), 4), TalkLines.option(shared.key("B"), 4));
     }
 }

@@ -1,5 +1,5 @@
 {
-  "comment": "EXPERIMENTAL. Columba's talk snapshot, version 1 (docs/ColumbaInterface.md, 'Talk'): what ATAK's PTT panel shows of Columba's live talk. Copied byte for byte into Columba; Columba builds each snapshot from its talk state and must write exactly this, and the plugin parses each and checks the lines in 'expect'. Names and hashes are synthetic.",
+  "comment": "EXPERIMENTAL. Columba's talk snapshot, version 1 (docs/ColumbaInterface.md, 'Talk'): what ATAK's PTT panel shows of Columba's live talk. Copied byte for byte into Columba; Columba builds each snapshot from its talk state and must write exactly this, and the plugin parses each and checks the lines in 'expect'. Each key lists the 12 channels its selector indexes ('channels', positions 1..12 in order) and whether a device holds the selectors ('locked'): what ATAK may select with talkSelect (capability bit 4). Names and hashes are synthetic.",
   "snapshots": [
     {
       "name": "talking-on-a-member-on-b",
@@ -23,7 +23,58 @@
             "phase": "talking",
             "line": "Talk · 0:04/0:30 · 2/3",
             "floor": "you",
-            "last": null
+            "last": null,
+            "locked": false,
+            "channels": [
+              {
+                "label": "Command",
+                "room": null
+              },
+              {
+                "label": "Medical",
+                "room": null
+              },
+              {
+                "label": "Search 1",
+                "room": "#search · 0a1b2c3d"
+              },
+              {
+                "label": "Search 2",
+                "room": null
+              },
+              {
+                "label": "Search 3",
+                "room": null
+              },
+              {
+                "label": "Rescue",
+                "room": null
+              },
+              {
+                "label": "Fire",
+                "room": null
+              },
+              {
+                "label": "Logistics",
+                "room": null
+              },
+              {
+                "label": "Shelter",
+                "room": null
+              },
+              {
+                "label": "Engineers",
+                "room": null
+              },
+              {
+                "label": "Comms",
+                "room": null
+              },
+              {
+                "label": "All teams",
+                "room": null
+              }
+            ]
           },
           {
             "key": "B",
@@ -33,7 +84,58 @@
             "phase": "idle",
             "line": "RX · Member 2",
             "floor": "Member 2",
-            "last": "Heard 2/2"
+            "last": "Heard 2/2",
+            "locked": false,
+            "channels": [
+              {
+                "label": "Kadikoy",
+                "room": null
+              },
+              {
+                "label": "Uskudar",
+                "room": null
+              },
+              {
+                "label": "Besiktas",
+                "room": null
+              },
+              {
+                "label": "Sisli",
+                "room": null
+              },
+              {
+                "label": "Fatih",
+                "room": null
+              },
+              {
+                "label": "Beyoglu",
+                "room": null
+              },
+              {
+                "label": "Bakirkoy",
+                "room": null
+              },
+              {
+                "label": "Zeytinburnu",
+                "room": null
+              },
+              {
+                "label": "Avcilar",
+                "room": null
+              },
+              {
+                "label": "Esenyurt",
+                "room": null
+              },
+              {
+                "label": "Pendik",
+                "room": null
+              },
+              {
+                "label": "Kartal",
+                "room": null
+              }
+            ]
           }
         ]
       },
@@ -45,13 +147,21 @@
             "channel": "A3 Search 1 · #search · 0a1b2c3d",
             "floor": "Floor: you",
             "button": "Talk · 0:04/0:30 · 2/3",
-            "last": ""
+            "last": "",
+            "selectable": true,
+            "picked": "03 Search 1 · #search · 0a1b2c3d",
+            "prev": "02 Medical",
+            "next": "04 Search 2"
           },
           "B": {
             "channel": "B1 Kadikoy",
             "floor": "Floor: Member 2",
             "button": "RX · Member 2",
-            "last": "Heard 2/2"
+            "last": "Heard 2/2",
+            "selectable": true,
+            "picked": "01 Kadikoy",
+            "prev": "12 Kartal",
+            "next": "02 Uskudar"
           }
         }
       }
@@ -99,7 +209,58 @@
             "phase": "idle",
             "line": "Hold to talk",
             "floor": null,
-            "last": null
+            "last": null,
+            "locked": false,
+            "channels": [
+              {
+                "label": "Command",
+                "room": null
+              },
+              {
+                "label": "Medical",
+                "room": null
+              },
+              {
+                "label": "Search 1",
+                "room": null
+              },
+              {
+                "label": "Search 2",
+                "room": null
+              },
+              {
+                "label": "Search 3",
+                "room": null
+              },
+              {
+                "label": "Rescue",
+                "room": null
+              },
+              {
+                "label": "Fire",
+                "room": null
+              },
+              {
+                "label": "Logistics",
+                "room": null
+              },
+              {
+                "label": "Shelter",
+                "room": null
+              },
+              {
+                "label": "Engineers",
+                "room": null
+              },
+              {
+                "label": "Comms",
+                "room": null
+              },
+              {
+                "label": "All teams",
+                "room": null
+              }
+            ]
           },
           {
             "key": "B",
@@ -109,7 +270,58 @@
             "phase": "connecting",
             "line": "Connecting…",
             "floor": null,
-            "last": "No relay · not sent"
+            "last": "No relay · not sent",
+            "locked": false,
+            "channels": [
+              {
+                "label": "Kadikoy",
+                "room": null
+              },
+              {
+                "label": "Uskudar",
+                "room": null
+              },
+              {
+                "label": "Besiktas",
+                "room": null
+              },
+              {
+                "label": "Sisli",
+                "room": null
+              },
+              {
+                "label": "Fatih",
+                "room": null
+              },
+              {
+                "label": "Beyoglu",
+                "room": null
+              },
+              {
+                "label": "Bakirkoy",
+                "room": null
+              },
+              {
+                "label": "Zeytinburnu",
+                "room": null
+              },
+              {
+                "label": "Avcilar",
+                "room": null
+              },
+              {
+                "label": "Esenyurt",
+                "room": null
+              },
+              {
+                "label": "Pendik",
+                "room": null
+              },
+              {
+                "label": "Kartal",
+                "room": null
+              }
+            ]
           }
         ]
       },
@@ -121,13 +333,21 @@
             "channel": "A1 Command",
             "floor": "Floor free",
             "button": "Hold to talk",
-            "last": ""
+            "last": "",
+            "selectable": true,
+            "picked": "01 Command",
+            "prev": "12 All teams",
+            "next": "02 Medical"
           },
           "B": {
             "channel": "B12 Kartal",
             "floor": "Floor free",
             "button": "Connecting…",
-            "last": "No relay · not sent"
+            "last": "No relay · not sent",
+            "selectable": true,
+            "picked": "12 Kartal",
+            "prev": "11 Pendik",
+            "next": "01 Kadikoy"
           }
         }
       }
@@ -154,7 +374,58 @@
             "phase": "idle",
             "line": "Hold to talk",
             "floor": null,
-            "last": null
+            "last": null,
+            "locked": false,
+            "channels": [
+              {
+                "label": "Command",
+                "room": null
+              },
+              {
+                "label": "Medical",
+                "room": null
+              },
+              {
+                "label": "Search 1",
+                "room": null
+              },
+              {
+                "label": "Search 2",
+                "room": null
+              },
+              {
+                "label": "Search 3",
+                "room": null
+              },
+              {
+                "label": "Rescue",
+                "room": null
+              },
+              {
+                "label": "Fire",
+                "room": null
+              },
+              {
+                "label": "Logistics",
+                "room": null
+              },
+              {
+                "label": "Shelter",
+                "room": null
+              },
+              {
+                "label": "Engineers",
+                "room": null
+              },
+              {
+                "label": "Comms",
+                "room": null
+              },
+              {
+                "label": "All teams",
+                "room": null
+              }
+            ]
           },
           {
             "key": "B",
@@ -164,7 +435,58 @@
             "phase": "idle",
             "line": "Hold to talk",
             "floor": null,
-            "last": null
+            "last": null,
+            "locked": false,
+            "channels": [
+              {
+                "label": "Kadikoy",
+                "room": null
+              },
+              {
+                "label": "Uskudar",
+                "room": null
+              },
+              {
+                "label": "Besiktas",
+                "room": null
+              },
+              {
+                "label": "Sisli",
+                "room": null
+              },
+              {
+                "label": "Fatih",
+                "room": null
+              },
+              {
+                "label": "Beyoglu",
+                "room": null
+              },
+              {
+                "label": "Bakirkoy",
+                "room": null
+              },
+              {
+                "label": "Zeytinburnu",
+                "room": null
+              },
+              {
+                "label": "Avcilar",
+                "room": null
+              },
+              {
+                "label": "Esenyurt",
+                "room": null
+              },
+              {
+                "label": "Pendik",
+                "room": null
+              },
+              {
+                "label": "Kartal",
+                "room": null
+              }
+            ]
           }
         ]
       },
@@ -176,13 +498,21 @@
             "channel": "A2 Medical",
             "floor": "Floor free",
             "button": "Hold to talk",
-            "last": ""
+            "last": "",
+            "selectable": true,
+            "picked": "02 Medical",
+            "prev": "01 Command",
+            "next": "03 Search 1"
           },
           "B": {
             "channel": "B1 Kadikoy",
             "floor": "Floor free",
             "button": "Hold to talk",
-            "last": ""
+            "last": "",
+            "selectable": true,
+            "picked": "01 Kadikoy",
+            "prev": "12 Kartal",
+            "next": "02 Uskudar"
           }
         }
       }
@@ -209,7 +539,58 @@
             "phase": "idle",
             "line": "Hold to talk",
             "floor": null,
-            "last": null
+            "last": null,
+            "locked": false,
+            "channels": [
+              {
+                "label": "Command",
+                "room": null
+              },
+              {
+                "label": "Medical",
+                "room": null
+              },
+              {
+                "label": "Search 1",
+                "room": null
+              },
+              {
+                "label": "Search 2",
+                "room": null
+              },
+              {
+                "label": "Search 3",
+                "room": null
+              },
+              {
+                "label": "Rescue",
+                "room": null
+              },
+              {
+                "label": "Fire",
+                "room": null
+              },
+              {
+                "label": "Logistics",
+                "room": null
+              },
+              {
+                "label": "Shelter",
+                "room": null
+              },
+              {
+                "label": "Engineers",
+                "room": null
+              },
+              {
+                "label": "Comms",
+                "room": null
+              },
+              {
+                "label": "All teams",
+                "room": null
+              }
+            ]
           },
           {
             "key": "B",
@@ -219,7 +600,58 @@
             "phase": "connecting",
             "line": "Connecting…",
             "floor": null,
-            "last": "No relay · not sent"
+            "last": "No relay · not sent",
+            "locked": false,
+            "channels": [
+              {
+                "label": "Kadikoy",
+                "room": null
+              },
+              {
+                "label": "Uskudar",
+                "room": null
+              },
+              {
+                "label": "Besiktas",
+                "room": null
+              },
+              {
+                "label": "Sisli",
+                "room": null
+              },
+              {
+                "label": "Fatih",
+                "room": null
+              },
+              {
+                "label": "Beyoglu",
+                "room": null
+              },
+              {
+                "label": "Bakirkoy",
+                "room": null
+              },
+              {
+                "label": "Zeytinburnu",
+                "room": null
+              },
+              {
+                "label": "Avcilar",
+                "room": null
+              },
+              {
+                "label": "Esenyurt",
+                "room": null
+              },
+              {
+                "label": "Pendik",
+                "room": null
+              },
+              {
+                "label": "Kartal",
+                "room": null
+              }
+            ]
           }
         ]
       },
@@ -231,13 +663,186 @@
             "channel": "A1 Command",
             "floor": "Floor free",
             "button": "Hold to talk",
-            "last": ""
+            "last": "",
+            "selectable": true,
+            "picked": "01 Command",
+            "prev": "12 All teams",
+            "next": "02 Medical"
           },
           "B": {
             "channel": "B12 Kartal",
             "floor": "Floor free",
             "button": "Connecting…",
-            "last": "No relay · not sent"
+            "last": "No relay · not sent",
+            "selectable": true,
+            "picked": "12 Kartal",
+            "prev": "11 Pendik",
+            "next": "01 Kadikoy"
+          }
+        }
+      }
+    },
+    {
+      "name": "shared-bank-device-selectors",
+      "snapshot": {
+        "v": 1,
+        "available": true,
+        "running": true,
+        "mode": "live",
+        "status": "Relay · this phone",
+        "transmitting": false,
+        "remote": true,
+        "background": true,
+        "mic_blocked": false,
+        "hint": null,
+        "keys": [
+          {
+            "key": "A",
+            "position": 4,
+            "label": "Search 2",
+            "room": "#search-2 · 0a1b2c3d",
+            "phase": "idle",
+            "line": "Hold to talk",
+            "floor": null,
+            "last": null,
+            "locked": true,
+            "channels": [
+              {
+                "label": "Command",
+                "room": null
+              },
+              {
+                "label": "Medical",
+                "room": null
+              },
+              {
+                "label": "Search 1",
+                "room": null
+              },
+              {
+                "label": "Search 2",
+                "room": "#search-2 · 0a1b2c3d"
+              },
+              {
+                "label": "Search 3",
+                "room": null
+              },
+              {
+                "label": "Rescue",
+                "room": null
+              },
+              {
+                "label": "Fire",
+                "room": null
+              },
+              {
+                "label": "Logistics",
+                "room": null
+              },
+              {
+                "label": "Shelter",
+                "room": null
+              },
+              {
+                "label": "Engineers",
+                "room": null
+              },
+              {
+                "label": "Comms",
+                "room": null
+              },
+              {
+                "label": "All teams",
+                "room": null
+              }
+            ]
+          },
+          {
+            "key": "B",
+            "position": 5,
+            "label": "Search 3",
+            "room": null,
+            "phase": "idle",
+            "line": "Hold to talk",
+            "floor": null,
+            "last": null,
+            "locked": true,
+            "channels": [
+              {
+                "label": "Command",
+                "room": null
+              },
+              {
+                "label": "Medical",
+                "room": null
+              },
+              {
+                "label": "Search 1",
+                "room": null
+              },
+              {
+                "label": "Search 2",
+                "room": "#search-2 · 0a1b2c3d"
+              },
+              {
+                "label": "Search 3",
+                "room": null
+              },
+              {
+                "label": "Rescue",
+                "room": null
+              },
+              {
+                "label": "Fire",
+                "room": null
+              },
+              {
+                "label": "Logistics",
+                "room": null
+              },
+              {
+                "label": "Shelter",
+                "room": null
+              },
+              {
+                "label": "Engineers",
+                "room": null
+              },
+              {
+                "label": "Comms",
+                "room": null
+              },
+              {
+                "label": "All teams",
+                "room": null
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "header": "Listening · Relay · this phone",
+        "note": null,
+        "keys": {
+          "A": {
+            "channel": "A4 Search 2 · #search-2 · 0a1b2c3d",
+            "floor": "Floor free",
+            "button": "Hold to talk",
+            "last": "",
+            "selectable": false,
+            "picked": "04 Search 2 · #search-2 · 0a1b2c3d",
+            "prev": "03 Search 1",
+            "next": "05 Search 3"
+          },
+          "B": {
+            "channel": "B5 Search 3",
+            "floor": "Floor free",
+            "button": "Hold to talk",
+            "last": "",
+            "selectable": false,
+            "picked": "05 Search 3",
+            "prev": "04 Search 2 · #search-2 · 0a1b2c3d",
+            "next": "06 Rescue"
           }
         }
       }

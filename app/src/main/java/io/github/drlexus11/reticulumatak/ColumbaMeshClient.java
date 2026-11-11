@@ -63,6 +63,8 @@ public final class ColumbaMeshClient {
     public static final int CAP_INTERFACES = 1;
     /** capabilities() bit: EXPERIMENTAL talk, ATAK's PTT panel (ColumbaInterface.md, "Talk"). */
     public static final int CAP_TALK = 2;
+    /** capabilities() bit: EXPERIMENTAL talk channel select, talkSelect (ColumbaInterface.md, "Talk"). */
+    public static final int CAP_TALK_SELECT = 4;
     /** Local result: this Columba lacks the capability the call needs. Never sent by Columba. */
     public static final int NOT_SUPPORTED = -1;
     private static final int ERR_NOT_READY = 3;
@@ -282,6 +284,14 @@ public final class ColumbaMeshClient {
 
     public void talkRelease(int key, Result result) {
         command(CAP_TALK, m -> m.talkRelease(key), result);
+    }
+
+    /**
+     * Turn key [key]'s selector (0 = A, 1 = B) to [position] (1..12): the channel
+     * the talk snapshot lists there. Columba's new state arrives as a talk push.
+     */
+    public void talkSelect(int key, int position, Result result) {
+        command(CAP_TALK_SELECT, m -> m.talkSelect(key, position), result);
     }
 
     /** Ask Columba to announce this node. Off the main thread: it can take seconds. */

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- EXPERIMENTAL. One key's column above its PTT key: selector position, channel,
-     room, who has the floor, and the last result, one short line each. -->
+     room, who has the floor, and the last result, one short line each; then the
+     selector's controls (Columba's capability bit 4): a step down, the channel
+     list, a step up, sized for gloves. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -65,4 +67,46 @@
         android:textColor="#FFCFD8DC"
         android:singleLine="true"
         android:ellipsize="end" />
+
+    <LinearLayout
+        android:id="@+id/card_selector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/card_prev"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="56dp"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:text="@string/talk_prev" />
+
+        <Button
+            android:id="@+id/card_list"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.4"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:minHeight="56dp"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:text="@string/talk_channels" />
+
+        <Button
+            android:id="@+id/card_next"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="56dp"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:text="@string/talk_next" />
+    </LinearLayout>
 </LinearLayout>
