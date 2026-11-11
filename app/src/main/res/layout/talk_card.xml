@@ -68,6 +68,18 @@
         android:singleLine="true"
         android:ellipsize="end" />
 
+    <TextView
+        android:id="@+id/card_locked"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textSize="15sp"
+        android:textColor="#FFFFD54F"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:text="@string/talk_selector_locked"
+        android:visibility="gone" />
+
     <LinearLayout
         android:id="@+id/card_selector"
         android:layout_width="match_parent"

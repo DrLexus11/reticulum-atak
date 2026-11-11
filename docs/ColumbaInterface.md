@@ -387,10 +387,14 @@ without bit 4 still drives PTT, and the page hides its selector controls.
 ```
 
 - **It turns Columba's own selector.** The effect is exactly a turn on
-  Columba's talk screen: the snapshot's `position`, `label` and `room` follow,
-  and live talk listens on the new channel. Columba's selector rules apply:
-  positions wrap 12 -> 1; in a shared bank both keys index one list; a key held
-  keeps the channel it keyed, and only its next press uses the new one.
+  Columba's talk screen: the snapshot's `position` follows, and so do `label`
+  and `room` unless the key is held. Columba's selector rules apply: in a shared
+  bank both keys index one list; a key held keeps the channel it keyed (its
+  `label` and `room` stay that one's) and only its next press uses the new one,
+  so the page shows the two apart: `A04 next · Search 2` over the keyed channel.
+- **Positions 1..12 only.** `13` or `0` gets `9 ERR_INVALID`; nothing wraps on
+  Columba's side. Wrapping 12 -> 1 is the caller's job, as the page's step
+  buttons do.
 - **Gated like every command:** `2 ERR_CONTROL_OFF` while "allow ATAK control"
   is off, logged in Columba with the caller. Live talk need not be running: a
   channel can be chosen while talk starts.
@@ -406,6 +410,9 @@ without bit 4 still drives PTT, and the page hides its selector controls.
   step up, each at least 56 dp for gloves. The list is ATAK's single-choice
   dialog with the current position ticked; a tap selects and closes. A refusal
   is one line, state first: `Not switched · PTT A · Selector on PTT device`.
+  A locked key says `Selector on PTT device` in its card, and its buttons are
+  grey. The buttons follow the snapshot's live `remote`, so they light as soon
+  as "allow ATAK control" is switched on, without leaving the page.
 
 ## Android's microphone rules
 

@@ -73,9 +73,22 @@ final class TalkLines {
                 || (t.remote && !t.background && t.hint != null);
     }
 
-    /** "A03": the key and its selector position, as Columba's dial shows it. */
+    /**
+     * "A03": the key and its selector position, as Columba's dial shows it. While a key is
+     * held its selector can move on while it keeps the channel it keyed (label and room are
+     * that one's); then the position names where the next press goes: "A04 next · Search 2".
+     */
     static String position(TalkSnapshot.Key k) {
-        return String.format(java.util.Locale.ROOT, "%s%02d", k.key, k.position);
+        String at = String.format(java.util.Locale.ROOT, "%s%02d", k.key, k.position);
+        TalkSnapshot.Channel selected = selected(k);
+        if (selected == null || (selected.label.equals(k.label) && java.util.Objects.equals(selected.room, k.room)))
+            return at;
+        return at + " next · " + selected.label;
+    }
+
+    /** The channel at the key's selector position, or null when Columba listed none. */
+    static TalkSnapshot.Channel selected(TalkSnapshot.Key k) {
+        return k.position >= 1 && k.position <= k.channels.size() ? k.channels.get(k.position - 1) : null;
     }
 
     static String room(TalkSnapshot.Key k) {

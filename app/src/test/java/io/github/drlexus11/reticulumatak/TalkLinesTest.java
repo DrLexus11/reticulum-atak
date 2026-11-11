@@ -141,6 +141,22 @@ public class TalkLinesTest {
     }
 
     @Test
+    public void aHeldKeyShowsWhereTheNextPressGoesApartFromItsChannel() {
+        StringBuilder bank = new StringBuilder();
+        for (int i = 1; i <= 12; i++)
+            bank.append(i > 1 ? "," : "").append("{\"label\":\"Ch ").append(i).append("\",\"room\":null}");
+        String key = "{\"key\":\"A\",\"position\":%d,\"label\":\"%s\",\"room\":null,\"phase\":\"talking\","
+                + "\"line\":\"Talk\",\"floor\":null,\"last\":null,\"locked\":false,\"channels\":[" + bank + "]}";
+        String head = "{\"v\":1,\"available\":true,\"running\":true,\"mode\":\"live\",\"status\":null,"
+                + "\"transmitting\":true,\"remote\":true,\"background\":true,\"hint\":null,\"keys\":[";
+        TalkSnapshot held = TalkSnapshot.parse(head + String.format(java.util.Locale.ROOT, key, 4, "Ch 3") + "]}");
+        assertEquals("A04 next · Ch 4", TalkLines.position(held.key("A")));
+        assertEquals("Ch 3", held.key("A").label);
+        TalkSnapshot settled = TalkSnapshot.parse(head + String.format(java.util.Locale.ROOT, key, 4, "Ch 4") + "]}");
+        assertEquals("A04", TalkLines.position(settled.key("A")));
+    }
+
+    @Test
     public void aSnapshotWithoutChannelsOffersNoSelector() {
         TalkSnapshot old = TalkSnapshot.parse("{\"v\":1,\"available\":true,\"running\":true,\"mode\":\"live\","
                 + "\"status\":null,\"transmitting\":false,\"remote\":false,\"background\":false,\"hint\":null,"
