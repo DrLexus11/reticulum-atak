@@ -73,13 +73,53 @@ final class TalkLines {
                 || (t.remote && !t.background && t.hint != null);
     }
 
-    /** "A03": the key and its selector position, as Columba's dial shows it. */
+    /**
+     * "A03": the key and its selector position, as Columba's dial shows it. While a key is
+     * held its selector can move on while it keeps the channel it keyed (label and room are
+     * that one's); then the position names where the next press goes: "A04 next · Search 2".
+     */
     static String position(TalkSnapshot.Key k) {
-        return String.format(java.util.Locale.ROOT, "%s%02d", k.key, k.position);
+        String at = String.format(java.util.Locale.ROOT, "%s%02d", k.key, k.position);
+        TalkSnapshot.Channel selected = selected(k);
+        if (selected == null || (selected.label.equals(k.label) && java.util.Objects.equals(selected.room, k.room)))
+            return at;
+        return at + " next · " + selected.label;
+    }
+
+    /** The channel at the key's selector position, or null when Columba listed none. */
+    static TalkSnapshot.Channel selected(TalkSnapshot.Key k) {
+        return k.position >= 1 && k.position <= k.channels.size() ? k.channels.get(k.position - 1) : null;
     }
 
     static String room(TalkSnapshot.Key k) {
         return k.room != null ? k.room : "No room";
+    }
+
+    /** Whether ATAK may turn this key's selector: Columba listed its channels and no device holds them. */
+    static boolean selectable(TalkSnapshot.Key k) {
+        return !k.locked && !k.channels.isEmpty();
+    }
+
+    /** The position [by] steps from the key's, wrapping round as Columba's encoder does; 1-based. */
+    static int step(TalkSnapshot.Key k, int by) {
+        int n = k.channels.isEmpty() ? 1 : k.channels.size();
+        int i = (k.position - 1 + by) % n;   // not floorMod: minSdk 21 (desugared, but plain is plainer)
+        return (i < 0 ? i + n : i) + 1;
+    }
+
+    /** "03 Search 1 · #search · 0a1b2c3d": one row of the channel list, as the dial numbers it. */
+    static String option(TalkSnapshot.Key k, int position) {
+        TalkSnapshot.Channel c = k.channels.get(position - 1);
+        String line = String.format(java.util.Locale.ROOT, "%02d %s", position, c.label);
+        return c.room != null ? line + " · " + c.room : line;
+    }
+
+    /** Every row of the channel list, positions 1..n. */
+    static String[] options(TalkSnapshot.Key k) {
+        String[] rows = new String[k.channels.size()];
+        for (int i = 0; i < rows.length; i++)
+            rows[i] = option(k, i + 1);
+        return rows;
     }
 
     /** A key's look, from its phase: the same states Columba's key colours. */
@@ -117,6 +157,8 @@ final class TalkLines {
                 return "Refused: bad request";
             case 10:
                 return "Mic blocked · open Columba";
+            case 11:
+                return "Selector on PTT device";
             case ColumbaMeshClient.NOT_SUPPORTED:
                 return "This Columba has no talk";
             default:

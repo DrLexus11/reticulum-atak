@@ -1,5 +1,6 @@
 package io.github.drlexus11.reticulumatak;
 
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -27,6 +28,12 @@ import com.atakmap.android.maps.MapView;
  * side by side, filling the rest, coloured by phase as Columba colours them.
  * Every line is pushed by Columba on change, so a press on Columba's screen
  * shows here and the other way round.
+ *
+ * Each column also turns its key's selector from ATAK (Columba's capability bit
+ * 4): a step down, the channel list, a step up. Columba moves its own selector,
+ * as if turned on its screen, and pushes the new state back; a key held keeps
+ * the channel it keyed. Hidden when the Columba cannot, greyed while ATAK
+ * control is off or a PTT device holds the selectors.
  *
  * Built for gloves: a key is held while any finger is down on it, wherever the
  * finger slides -- the pager cannot take the touch over -- and both keys can be
@@ -61,6 +68,11 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
         final TextView room;
         final TextView floor;
         final TextView last;
+        final View selector;
+        final TextView locked;
+        final Button prev;
+        final Button list;
+        final Button next;
         /** The press in flight; its Binder is kept until the release is answered: Columba watches it for ATAK's death. */
         final KeyHold<Binder> hold = new KeyHold<>();
 
@@ -74,6 +86,17 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
             room = card.findViewById(R.id.card_room);
             floor = card.findViewById(R.id.card_floor);
             last = card.findViewById(R.id.card_last);
+            selector = card.findViewById(R.id.card_selector);
+            locked = card.findViewById(R.id.card_locked);
+            prev = card.findViewById(R.id.card_prev);
+            list = card.findViewById(R.id.card_list);
+            next = card.findViewById(R.id.card_next);
+            prev.setContentDescription("Channel down " + NAMES[index]);
+            list.setContentDescription("Channel list " + NAMES[index]);
+            next.setContentDescription("Channel up " + NAMES[index]);
+            prev.setOnClickListener(v -> stepChannel(this, -1));
+            next.setOnClickListener(v -> stepChannel(this, 1));
+            list.setOnClickListener(v -> pickChannel(this));
             background.setCornerRadius(24f * density);
             key.setBackground(background);
             name.setText("PTT " + NAMES[index]);
@@ -128,7 +151,6 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
 
     private TalkSnapshot talk;
     private boolean connected;
-    private int watchCode;
 
     TalkPage(Context pluginContext, MeshSession session) {
         this.pluginContext = pluginContext;
@@ -190,7 +212,7 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
 
     @Override
     public void onTalkWatch(int code) {
-        watchCode = code;
+        // The answer is the state when the watch began; the snapshot's "remote" stays live.
         render();
     }
 
@@ -223,6 +245,48 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
         render();
     }
 
+    /** The key's state as Columba last pushed it, when ATAK may turn its selector now. */
+    private TalkSnapshot.Key selectable(Key k) {
+        if (!canSelect() || talk == null)
+            return null;
+        TalkSnapshot.Key state = talk.key(NAMES[k.index]);
+        return state != null && TalkLines.selectable(state) ? state : null;
+    }
+
+    private void stepChannel(Key k, int by) {
+        TalkSnapshot.Key state = selectable(k);
+        if (state != null)
+            select(k, TalkLines.step(state, by));
+    }
+
+    /** The channel list for one key, its current position ticked; a tap selects and closes. */
+    private void pickChannel(Key k) {
+        TalkSnapshot.Key state = selectable(k);
+        MapView map = MapView.getMapView();
+        if (state == null || map == null)
+            return;
+        new AlertDialog.Builder(map.getContext())
+                .setTitle("PTT " + NAMES[k.index] + " channel")
+                .setSingleChoiceItems(TalkLines.options(state), state.position - 1, (d, which) -> {
+                    d.dismiss();
+                    // Against the key as it is now, not as it was when the list opened: the
+                    // selector may have moved since (Columba's screen, another remote).
+                    TalkSnapshot.Key now = talk != null ? talk.key(NAMES[k.index]) : null;
+                    if (now == null || which + 1 != now.position)
+                        select(k, which + 1);
+                })
+                .setNegativeButton(pluginContext.getString(R.string.cancel), null)
+                .show();
+    }
+
+    private void select(Key k, int position) {
+        final int index = k.index;
+        session.client().talkSelect(index, position, code -> {
+            if (code != 0)
+                PeerActions.say(pluginContext, "Not switched · PTT " + NAMES[index] + " · " + TalkLines.result(code));
+        });
+    }
+
     /** Opens Columba's talk screen, which starts talk; back to ATAK with Home or Recents. */
     private void openColumbaTalk() {
         String pkg = session.client().boundPackage();
@@ -241,6 +305,15 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
 
     private boolean supported() {
         return connected && session.client().has(ColumbaMeshClient.CAP_TALK);
+    }
+
+    /**
+     * This Columba turns its selectors for ATAK, and ATAK control is on now: Columba counts
+     * this page as its remote (the snapshot's live "remote"), which it pushes again whenever
+     * "Allow ATAK control" is switched. The watch's answer is only the state when it began.
+     */
+    private boolean canSelect() {
+        return supported() && session.client().has(ColumbaMeshClient.CAP_TALK_SELECT) && talk != null && talk.remote;
     }
 
     private boolean canPress() {
@@ -274,7 +347,7 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
                 : talk.transmitting ? BANNER_TX
                 : BANNER_RX;
         banner(TalkLines.title(talk), TalkLines.subtitle(talk), color);
-        String warning = watchCode == 2 ? pluginContext.getString(R.string.talk_control_off) : TalkLines.note(talk);
+        String warning = !talk.remote ? pluginContext.getString(R.string.talk_control_off) : TalkLines.note(talk);
         show(note, warning);
         openColumba.setVisibility(TalkLines.offerOpen(talk) && session.client().boundPackage() != null
                 ? View.VISIBLE : View.GONE);
@@ -297,6 +370,8 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
             k.floor.setText("");
             k.last.setText("");
             k.line.setText("Talk off");
+            k.selector.setVisibility(View.GONE);
+            k.locked.setVisibility(View.GONE);
             paint(k, TalkLines.Style.IDLE, false);
             k.key.setContentDescription("Push to talk " + NAMES[k.index] + ", talk off");
             return;
@@ -307,6 +382,17 @@ final class TalkPage implements MeshSession.View, ColumbaMeshClient.TalkListener
         k.floor.setText(TalkLines.floor(state));
         k.last.setText(TalkLines.last(state));
         k.line.setText(state.line);
+        boolean offered = session.client().has(ColumbaMeshClient.CAP_TALK_SELECT) && !state.channels.isEmpty();
+        k.selector.setVisibility(offered ? View.VISIBLE : View.GONE);
+        boolean turnable = selectable(k) != null;
+        for (Button b : new Button[] {k.prev, k.list, k.next}) {
+            b.setEnabled(turnable);
+            b.setAlpha(turnable ? 1f : 0.45f);
+        }
+        // Locked by a PTT device: one line in the card, and the list's description.
+        k.locked.setVisibility(offered && state.locked ? View.VISIBLE : View.GONE);
+        k.list.setContentDescription(state.locked ? "Channel list " + NAMES[k.index] + ", selector on PTT device"
+                : "Channel list " + NAMES[k.index]);
         paint(k, TalkLines.style(state), canPress() || k.hold.held());
         k.key.setContentDescription(TalkLines.keyDescription(state));
     }

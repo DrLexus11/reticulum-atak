@@ -23,4 +23,8 @@
     <string name="tab_talk">Talk</string>
     <string name="talk_open_columba">Open Talk in Columba</string>
     <string name="talk_control_off">ATAK control off in Columba: view only</string>
+    <string name="talk_selector_locked">Selector on PTT device</string>
+    <string name="talk_prev">◀</string>
+    <string name="talk_next">▶</string>
+    <string name="talk_channels">☰</string>
 </resources>

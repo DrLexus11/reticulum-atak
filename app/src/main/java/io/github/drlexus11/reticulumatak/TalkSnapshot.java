@@ -31,9 +31,13 @@ public final class TalkSnapshot {
         public final String line;
         public final String floor;
         public final String last;
+        /** A device holds the selectors (absolute): ATAK cannot turn them. Absent from older snapshots: false. */
+        public final boolean locked;
+        /** The channels this key's selector indexes, positions 1..n in order. Absent from older snapshots: empty. */
+        public final List<Channel> channels;
 
         Key(String key, int position, String label, String room, String phase, String line,
-                String floor, String last) {
+                String floor, String last, boolean locked, List<Channel> channels) {
             this.key = key;
             this.position = position;
             this.label = label;
@@ -42,6 +46,8 @@ public final class TalkSnapshot {
             this.line = line;
             this.floor = floor;
             this.last = last;
+            this.locked = locked;
+            this.channels = Collections.unmodifiableList(channels);
         }
 
         public boolean talking() {
@@ -51,6 +57,18 @@ public final class TalkSnapshot {
         /** Keyed and not yet on air: the rendezvous or the path is still running. */
         public boolean waiting() {
             return "calling".equals(phase) || "connecting".equals(phase) || "ready".equals(phase);
+        }
+    }
+
+    /** One selector position's channel, in Columba's words. */
+    public static final class Channel {
+        public final String label;
+        /** The bound Groups room, or null for a seeded channel. */
+        public final String room;
+
+        Channel(String label, String room) {
+            this.label = label;
+            this.room = room;
         }
     }
 
@@ -108,9 +126,17 @@ public final class TalkSnapshot {
             JSONArray list = root.getJSONArray("keys");
             for (int i = 0; i < list.length(); i++) {
                 JSONObject k = list.getJSONObject(i);
+                List<Channel> channels = new ArrayList<>();
+                JSONArray bank = k.optJSONArray("channels");
+                if (bank != null) {
+                    for (int j = 0; j < bank.length(); j++) {
+                        JSONObject c = bank.getJSONObject(j);
+                        channels.add(new Channel(c.getString("label"), string(c, "room")));
+                    }
+                }
                 keys.add(new Key(k.getString("key"), k.getInt("position"), k.getString("label"),
                         string(k, "room"), k.getString("phase"), k.getString("line"),
-                        string(k, "floor"), string(k, "last")));
+                        string(k, "floor"), string(k, "last"), k.optBoolean("locked", false), channels));
             }
             return new TalkSnapshot(root.getBoolean("available"), root.getBoolean("running"),
                     string(root, "mode"), string(root, "status"), root.getBoolean("transmitting"),

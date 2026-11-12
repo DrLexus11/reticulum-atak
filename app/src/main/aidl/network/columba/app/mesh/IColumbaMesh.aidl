@@ -24,7 +24,7 @@ interface IColumbaMesh {
     // ---- appended (ColumbaInterface.md, "Interfaces"): the version 1 methods'
     // ---- transaction codes are unchanged, so an older client keeps working.
 
-    /** Bitmask of what this service offers: 1 = interfaces, 2 = talk. 0 from a Columba that predates it. */
+    /** Bitmask of what this service offers: 1 = interfaces, 2 = talk, 4 = talk channel select. 0 from a Columba that predates it. */
     int capabilities();
 
     /** Switch one configured interface; Columba's guard refuses isolating switches. */
@@ -55,4 +55,15 @@ interface IColumbaMesh {
 
     /** Key [key] up. Never refused for "allow ATAK control" off: letting go is always allowed. */
     int talkRelease(int key);
+
+    // ---- appended (ColumbaInterface.md, "Talk", "Selecting a channel"): capability bit 4.
+    // ---- Every earlier method's transaction code is unchanged.
+
+    /**
+     * Turns key [key]'s selector (0 = A, 1 = B) to [position] (1..12), as Columba's own
+     * selector does: the channel is the one the talk snapshot lists at that position. A key
+     * held keeps the channel it keyed. Gated by "allow ATAK control"; refused while the
+     * selectors are a device's.
+     */
+    int talkSelect(int key, int position);
 }
