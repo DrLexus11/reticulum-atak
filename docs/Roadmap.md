@@ -151,9 +151,17 @@ The Talk page stays as it is. Added beside it, decided by the operator on
   while live talk runs, screen off included ("Volume keys talk"). So the
   plugin adds no key handler of its own (it would fight Columba's session).
   The trial is a bench run with ATAK in front: do the keys reach Columba
-  then? Columba's keys are **tap to start, tap to stop** -- a latch -- so
-  whether they should hold instead, like the on-screen keys, is the
-  operator's call. Cancelled down the line if it is a hurdle.
+  then? Columba's keys are **tap to start, tap to stop** today -- a latch.
+  **Decided 2026-11-21 (operator): hold to talk, and letting go releases,
+  the same as the on-screen key** (superseding the 11-12 tap rule for the
+  volume keys). That is a Columba change, and Android makes it awkward: a
+  held volume key reaches a MediaSession only as repeated volume steps (the
+  first repeat 400 ms after the press, then every 50 ms), so the release
+  must be read from the steps stopping -- unless Android also reports the
+  key-up as a zero step, which Columba's handler already filters out and a
+  bench phone settles. Headset media buttons stay taps: Android takes a held
+  hook or play/pause as the voice assistant. A taught PTT accessory key is
+  already hold to talk. Cancelled down the line if it is a hurdle.
 - **ATAK Settings**, for set-once choices only: the overlay keys on or off,
   their size, which keys show. Nothing needed in the middle of an incident
   lives there.
@@ -170,6 +178,7 @@ merges:
 2. The tile channel picker, on the Talk page and the overlay.
 3. The `OpenDecisions.md` amendment and Columba's audio capability (a
    Columba pull request), then the audio controls here.
-4. The volume-key trial: Columba's existing volume-key PTT with ATAK in
-   front, and the operator's tap-or-hold decision.
+4. The volume-key trial: Columba's volume keys made hold to talk (a Columba
+   pull request: the release read from the key-up or from the steps
+   stopping), then checked with ATAK in front.
 5. The talker on the map, if wanted, after Columba's UID field.
