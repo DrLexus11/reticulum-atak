@@ -103,8 +103,12 @@ later:
   panel open. Scheduled 2026-11-21 (operator): an icon in the overlay's header,
   **long-press** to announce, so a stray tap spends no airtime (on a slow LoRa
   preset an announce costs a second or more). One line back, state first
-  (`ANNOUNCED 14:02`), and greyed for a cooldown. Columba's announce command
-  exists; no Columba change. See *Talk on the map* below, step 1.
+  (`ANNOUNCED 14:02`), and greyed for Columba's own floor (60 s between
+  announces through the mesh interface; Columba refuses sooner ones). The
+  header, or at least the icon, stays drawn when no favourite is among the
+  peers -- today the overlay draws nothing then, which is exactly when an
+  announce is wanted. Columba's announce command exists (`announce()`); no
+  Columba change. See *Talk on the map* below, step 1.
 
 ## Talk on the map -- scheduled 2026-11-21
 
@@ -117,6 +121,14 @@ The Talk page stays as it is. Added beside it, decided by the operator on
   Each key shows its channel with a step down and a step up beside it, and one
   state line, tinted by phase (`TALKING`, `LISTENING`). Drawn with ATAK's map
   widgets, which report press and release separately.
+  - **The watch rule changes:** today the plugin watches talk only while the
+    Talk page is in view, and in Columba the watcher is the claim -- no
+    watcher, no talk snapshot and no live talk for the remote. Overlay keys
+    need a watcher while the overlay shows, which keeps Columba's microphone
+    service up the whole time; Android 12+ may refuse to start that service
+    from the background. The rule (when the overlay watches, and what it
+    shows when Columba cannot start talk) is settled and written into
+    `ColumbaInterface.md`'s watch lifecycle as part of step 1.
   - **To prove first, on a bench phone:** the Talk page holds a key while a
     finger slides off it; a map widget may not report that release the same
     way, and a missed release is a stuck key. Columba's maximum hold and the
@@ -131,15 +143,24 @@ The Talk page stays as it is. Added beside it, decided by the operator on
   Bluetooth headset, and the talk volume through ATAK's on-map slider. Columba
   keeps these today and offers no command for them, so **a Columba capability
   comes first** (a new bit, behind "allow ATAK control", additive to
-  `ColumbaInterface.md` like channel select), then the plugin's controls.
-- **Volume keys as PTT**, as some voice plugins do -- **trial**: it needs an
-  accessibility service, an extra permission that also weighs in TAK.gov's
-  release review. Tried, and cancelled down the line if it is a hurdle.
+  `ColumbaInterface.md` like channel select), with **an amendment to
+  `OpenDecisions.md`**, whose list of permitted commands is closed and says
+  talk audio stays in Columba; then the plugin's controls.
+- **Volume keys as PTT -- trial.** Columba already has it, with no
+  accessibility service: an opt-in MediaSession that takes the volume keys
+  while live talk runs, screen off included ("Volume keys talk"). So the
+  plugin adds no key handler of its own (it would fight Columba's session).
+  The trial is a bench run with ATAK in front: do the keys reach Columba
+  then? Columba's keys are **tap to start, tap to stop** -- a latch -- so
+  whether they should hold instead, like the on-screen keys, is the
+  operator's call. Cancelled down the line if it is a hurdle.
 - **ATAK Settings**, for set-once choices only: the overlay keys on or off,
-  their size, which keys show, the announce cooldown. Nothing needed in the
-  middle of an incident lives there.
-- **Later, optional:** the talker's marker highlighted on the map, from the
-  floor holder Columba already reports.
+  their size, which keys show. Nothing needed in the middle of an incident
+  lives there.
+- **Later, optional:** the talker's marker highlighted on the map. The talk
+  snapshot names the floor holder by display name, not by UID, so a Columba
+  field (the talker's UID) comes first; the plugin does not guess markers
+  from names.
 
 Order, each its own pull request, each tested on the bench phones before it
 merges:
@@ -147,7 +168,8 @@ merges:
 1. The overlay keys (press to talk) and the overlay's Announce icon
    (long-press).
 2. The tile channel picker, on the Talk page and the overlay.
-3. Columba's audio capability (a Columba pull request), then the audio
-   controls here.
-4. The volume-key PTT trial.
-5. The talker on the map, if wanted.
+3. The `OpenDecisions.md` amendment and Columba's audio capability (a
+   Columba pull request), then the audio controls here.
+4. The volume-key trial: Columba's existing volume-key PTT with ATAK in
+   front, and the operator's tap-or-hold decision.
+5. The talker on the map, if wanted, after Columba's UID field.
