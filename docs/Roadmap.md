@@ -100,4 +100,54 @@ later:
 - **Pagination**: with more favourites than fit, pages of rows rather than a
   column that runs off the map.
 - **A small Announce button** on the overlay, so announcing does not need the
-  panel open.
+  panel open. Scheduled 2026-11-21 (operator): an icon in the overlay's header,
+  **long-press** to announce, so a stray tap spends no airtime (on a slow LoRa
+  preset an announce costs a second or more). One line back, state first
+  (`ANNOUNCED 14:02`), and greyed for a cooldown. Columba's announce command
+  exists; no Columba change. See *Talk on the map* below, step 1.
+
+## Talk on the map -- scheduled 2026-11-21
+
+The Talk page stays as it is. Added beside it, decided by the operator on
+2026-11-21:
+
+- **The keys on the map.** A setting, off by default, puts the A and B keys on
+  the map as an overlay, like the favourites: **press to talk, as on Columba's
+  own talk screen; no latch mode**, because a latch is how a key stays on.
+  Each key shows its channel with a step down and a step up beside it, and one
+  state line, tinted by phase (`TALKING`, `LISTENING`). Drawn with ATAK's map
+  widgets, which report press and release separately.
+  - **To prove first, on a bench phone:** the Talk page holds a key while a
+    finger slides off it; a map widget may not report that release the same
+    way, and a missed release is a stuck key. Columba's maximum hold and the
+    press's token are the backstop, not the design. If the widgets cannot hold
+    a key safely, the overlay keys are drawn another way before they ship.
+- **Changing channels.** The step buttons stay as the knob. The list button
+  becomes ATAK's `TileButtonDialog`: large tiles, positions 1..12, each with
+  its channel and room, the current one marked -- the radio's channel sheet.
+  The same picker opens from the Talk page and from the overlay (tap the
+  channel). No Columba change: it uses channel select (capability bit 4).
+- **Audio where the keys are.** One button cycling Speaker, Earpiece and
+  Bluetooth headset, and the talk volume through ATAK's on-map slider. Columba
+  keeps these today and offers no command for them, so **a Columba capability
+  comes first** (a new bit, behind "allow ATAK control", additive to
+  `ColumbaInterface.md` like channel select), then the plugin's controls.
+- **Volume keys as PTT**, as some voice plugins do -- **trial**: it needs an
+  accessibility service, an extra permission that also weighs in TAK.gov's
+  release review. Tried, and cancelled down the line if it is a hurdle.
+- **ATAK Settings**, for set-once choices only: the overlay keys on or off,
+  their size, which keys show, the announce cooldown. Nothing needed in the
+  middle of an incident lives there.
+- **Later, optional:** the talker's marker highlighted on the map, from the
+  floor holder Columba already reports.
+
+Order, each its own pull request, each tested on the bench phones before it
+merges:
+
+1. The overlay keys (press to talk) and the overlay's Announce icon
+   (long-press).
+2. The tile channel picker, on the Talk page and the overlay.
+3. Columba's audio capability (a Columba pull request), then the audio
+   controls here.
+4. The volume-key PTT trial.
+5. The talker on the map, if wanted.
