@@ -1,7 +1,11 @@
 # The standalone plugin -- design and feasibility
 
-**Status: proposal, 2026-11-08. Nothing here is built.** Post-demo work: none of
-it touches the demo build or the phones it runs on.
+**Status: direction decided 2026-11-25 (operator); the design below is the plan. Nothing
+here is built yet.**
+
+**Decision (operator, 2026-11-25):** the plugin is standalone, and it runs **our own
+maintained fork of the Python Reticulum stack** inside it (the same RNS/LXMF forks Columba
+uses), not upstream packages fetched at build time.
 
 **The direction (operator, 2026-11-08):** the plugin becomes standalone. It runs
 its own Reticulum and LXMF stack, the same way Columba does, with Python inside
