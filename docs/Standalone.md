@@ -5,7 +5,7 @@ here is built yet.**
 
 **Decision (operator, 2026-11-25):** the plugin is standalone, and it runs **our own
 maintained fork of the Python Reticulum stack** inside it (the same RNS/LXMF forks Columba
-uses), not upstream packages fetched at build time.
+uses), not upstream packages. Fetching our forks with pip at build time, as Columba does, is fine.
 
 **The direction (operator, 2026-11-08):** the plugin becomes standalone. It runs
 its own Reticulum and LXMF stack, the same way Columba does, with Python inside
@@ -181,7 +181,7 @@ From this plugin's own 5.6.0 pipeline build log (October 2026) [V]:
   therefore run on the pipeline build in the store ATAK, never only on a debug
   build.
 - **ABIs** [R]. The plugin filters `armeabi-v7a`, `arm64-v8a` and `x86` [V]. The
-  desktop's Waydroid runs ATAK 5.8 on x86_64 (`Setup.md`). Python must be built
+  desktop's Waydroid ran ATAK 5.8 on x86_64 until it was retired on 2026-11-16 (`Setup.md`). Python must be built
   per ABI, so the filter becomes `arm64-v8a`, `armeabi-v7a` and `x86_64`, which
   is Columba's set [V].
 - **`minSdk` rises from 21 to 24** [V]. Chaquopy requires 24: its documentation
@@ -189,10 +189,10 @@ From this plugin's own 5.6.0 pipeline build log (October 2026) [V]:
   plugins a higher minimum (`Build_Environment_Changes.pdf`). This drops
   Android 5 and 6. Both bench phones are newer.
 
-## 3. The stack: Python (the operator's route) or Kotlin
+## 3. The stack: Python (decided 2026-11-25) or Kotlin
 
 Columba has two backends behind one API (`rns-api`). One is
-`rns-backend-py`: upstream Python RNS and LXMF under Chaquopy. The other is
+`rns-backend-py`: our forks of Python RNS and LXMF under Chaquopy. The other is
 `rns-backend-kt`: reticulum-kt and LXMF-kt.
 
 ### 3.1 Python under Chaquopy
@@ -361,11 +361,8 @@ own stack, not through someone else's [R].
   and `SO_REUSEPORT`, so two instances both bind them and both hear discovery.
   The data socket (port 42671, through `socketserver.UDPServer`, no reuse) can
   be held by only one. A second instance fails to bind it.
-  - Columba detects this and skips Auto, by a test bind on 29717
-    (`SharedInstanceProbe.isAutoInterfaceUsable`).
-  - RNS's data port is 42671, and 29717 is its unicast-discovery port. The probe
-    should be checked against that before the plugin relies on Columba stepping
-    aside.
+  - Columba detects this and skips Auto. How its check matches RNS's ports is verified before the
+    plugin relies on Columba stepping aside.
 - **Peers could not tell the two apps apart on Auto** [R]. Both would answer
   from one link-local address.
 - **BLE** [U]. Two apps serving the same GATT service UUID on one phone is
@@ -452,10 +449,8 @@ of its own, after PTT parity (section 8, phase 2).
   **including the sender**. The hub keeps the client's message id, timestamp
   and body, and stamps the sender from the link identity. The nickname is
   display only.
-- **Our firmware hub has no keys, invites, bans or operators** (§13, deferred).
-  Anyone who can reach the hub and knows the name can join.
-  - rrcd-style hubs, and Eridanus's own hub, do have invite-only, keys and bans
-    [V] (Eridanus `HubRoomManager`).
+- **Room access control on our firmware hub is not yet enforced** (deferred). rrcd-style hubs, and
+  Eridanus's own hub, have invite-only rooms, keys and bans [V] (Eridanus `HubRoomManager`).
 - **Bridged rooms.** These are provisioned at boot, and changing the list needs
   a reboot. They mirror room lines to absent members over LXMF, using
   `rrc.bridge/1` fields with the RRC message id (§12c,
@@ -489,7 +484,7 @@ groups, is a decision.
 | -- | sends the binding to each member as an **LXMF DM** (`rrc.group/1` in custom fields, like `rrc.bridge/1`): end-to-end, store-and-forward, reaches absent members | -- | R |
 | Member receives the binding | creates the group in ATAK (`ChatDatabase.addGroup`, or an injected group line carrying `chatgrp`, as ATAK itself does) and JOINs | the member JOINs | R |
 | Owner adds a member | ATAK sends `[UPDATED CONTACTS]`; the plugin sends the new member the binding, and the others the new list | the new member JOINs | R |
-| Owner removes a member | ATAK sends `[KICKED FROM GROUP]`; the plugin tells the removed member, whose plugin PARTs | **on our hub, nothing stops a re-JOIN**: removal is advisory. On an rrcd-style hub the owner's plugin can use invite-only rooms and bans | V hub behaviour, R flow |
+| Owner removes a member | ATAK sends `[KICKED FROM GROUP]`; the plugin tells the removed member, whose plugin PARTs | on our hub, removal is not yet enforced. On an rrcd-style hub the owner's plugin can use invite-only rooms and bans | V hub behaviour, R flow |
 | Rename | the binding is keyed by group UID, so the room keeps its name and only the display changes | none | R |
 | Owner deletes the group | ATAK's "Deleted group" line; plugins PART and drop the binding | the room dies when empty (ephemeral) or persists (bridged) | V hub, R flow |
 | A member deletes a group they did not create | local only, as ATAK's rule: that member PARTs | that member PARTs | V rule |
@@ -572,8 +567,7 @@ In the plugin [R]:
 - removing a member from the group also removes them from the talk channel's
   roster once lxpt keys arrive (T8).
 
-Until T8, talk keys are derived from the channel id (T3a, bench only [V]). So a
-removed member can still listen, which is the same limit as the room text.
+Until T8 (lxpt keys), talk access has the same limit as the room text.
 
 ### 6.6 Limits
 
@@ -655,45 +649,9 @@ plugin ships other people's code, so the choice is now due. What it would carry:
 | Codec2 | LGPL-2.1 [V] (as LXST-kt's README states) | link dynamically; let the user replace the library [R] |
 | Eridanus RRC client (phase 2) | MPL-2.0 [V] | as Columba's files |
 
-**The Reticulum License and ATAK** [R, a counsel question]. The plugin is for
-disaster response. ATAK is also used by armed forces. With RNS inside the
-plugin, the "harm" clause binds the plugin directly, not through Columba.
-Columba's TAK bridge already puts RNS beside ATAK, so the programme has a
-position. A public plugin makes that position public. Flag it; do not resolve
-it here.
-
-**LXST-kt, a blocker for its use** [V]:
-
-- **Terms.** `DrLexus11/LXST-kt` (private since 2026-11-07; LICENSE on `main`
-  since PR #9) and upstream `torlando-tech/LXST-kt` (commit `b399d6c`, "Change
-  license to LXST Copyright 2026") both read: "LXST Copyright 2026 Mark Qvist.
-  This implementation of LXST is derived from the LXST Python implementation,
-  and used under license for Columba. No derivatives or use outside Columba is
-  permitted."
-- **Python LXST is CC BY-NC-ND 4.0.**
-- The programme follows the authors' current terms (PR #9).
-
-What a public plugin may do with LXST-kt:
-
-| Use | Allowed? | Why |
-| --- | --- | --- |
-| Depend on an unmodified binary (the cached JitPack artifact, or a release) | **No** | the plugin is "use outside Columba" |
-| Vendor its source, modified or not | **No** | a derivative, outside Columba, and published |
-| Use our modified `impr` builds | **No** | the same, and a derivative |
-| Talk to Columba's LXST-kt over the air | **Yes** [R] | interoperating with a running program over a wire format is not using its code. lxpt FRAMEs carry bare Opus or Codec2 frames (section 4) |
-| Reimplement LXST call signalling for one-to-one calls | **Counsel** | upstream's author has said machine-assisted ports are derivative works. Whether an implementation of the protocol written from the wire is one is a legal question |
-| Versions published under MPL-2.0 before 2026-11-05 | **Counsel** | MPL grants for code already received are normally not revocable, but the programme has chosen to follow the authors' current terms |
-
-**The way through, for the operator to choose:**
-
-- **(A) Recommended.** Write the talk audio in the plugin: Android audio or
-  Oboe, libopus and Codec2, written without reading LXST-kt or Python LXST
-  source. Talk needs no LXST protocol, only codec frames. One-to-one calls stay
-  out of the plugin.
-- **(B)** Ask the authors for written permission to use LXST-kt in the plugin.
-- **(C)** Take counsel on the MPL-era versions.
-
-(A) does not need (B) or (C).
+**Talk audio.** The plugin writes its own talk audio (Android audio or Oboe, libopus and Codec2) and
+uses no LXST-kt code: talk needs only codec frames (section 4). One-to-one calls stay out of the
+plugin. Further licensing notes are kept in the programme's private repository.
 
 **Columba's code in a public repository** [V]. Columba has been private since
 2026-10-16. MPL lets its files be published, and most talk files were written by
@@ -708,9 +666,9 @@ the bench build. Bench facts [V]:
 - the Nexus runs developer ATAK 5.5.1.8 on Android 8.1 (bench builds, debug
   key);
 - the Samsung phone runs store ATAK 5.6.0.12 and takes pipeline builds;
-- Waydroid on the desktop runs ATAK 5.8, x86_64.
+- (Waydroid, which ran ATAK 5.8 on x86_64, was retired on 2026-11-16.)
 
-Waydroid is for UI and IP only: it has no microphone or BLE path worth measuring
+Waydroid was for UI and IP only: it has no microphone or BLE path worth measuring
 [R].
 
 ### Phase 0 -- spike: the plugin's service starts the stack and lists Auto peers
@@ -744,7 +702,7 @@ This decides the Python layout (3.2 or 3.3) before code depends on it.
 
 **Gate (hardware):**
 
-- the service starts from the ATAK pane on all three ATAKs, and its foreground
+- the service starts from the ATAK pane on both phones' ATAKs, and its foreground
   notification shows;
 - on the Samsung phone, the service starts with the microphone type through
   route (a) or (b) of 2.3, and the log shows no "started from background can not
@@ -844,16 +802,13 @@ LoRa works for text (the hub's 280 B fits the MDU [V]), and is measured.
 
 ## 9. Decisions for the operator
 
-1. **Stack.** Python, as you stated, is recommended. Kotlin is the alternative,
-   blocked today by talk hosting.
-2. **Python layout.** Columba's pip build, or vendored pure Python with RNS's
-   internal crypto. Decided by the phase 0 probe; you confirm the trade (CPU on
-   key-up).
+1. **Stack. Decided 2026-11-25:** Python, on our own maintained forks of RNS and LXMF.
+2. **Python layout. Decided 2026-11-25:** Columba's pip build is fine, pinned to our forks at
+   build time (vendoring stays an option if the pipeline probe needs it).
 3. **Columba's backend.** Copy Columba's Python backend (MPL, hardened), or write
    a thin bridge for the plugin.
-4. **LXST-kt.** (A) our own talk audio, recommended; (B) ask the authors for
-   written permission; (C) counsel on the MPL-era versions. With (A) only, the
-   plugin has no one-to-one calls.
+4. **Talk audio.** Our own (Android audio or Oboe, libopus, Codec2); no one-to-one calls in
+   the plugin.
 5. **One owner per phone.** The plugin never hosts or joins a shared instance,
    and stands down Auto, BLE and chat when Columba is active. Confirm this, or
    choose otherwise.
@@ -861,13 +816,12 @@ LoRa works for text (the hub's 280 B fits the MDU [V]), and is measured.
    lives, and whether Columba's identity may ever be *moved* into the plugin.
 7. **Publishing Columba code** in this public repository (MPL allows it; privacy
    is the question).
-8. **This repository's licence** (`OpenDecisions.md` 3), and the Reticulum
-   License's harm clause for a public ATAK plugin (counsel).
+8. **This repository's licence** (`OpenDecisions.md` 3).
 9. **`minSdk` 24**, which drops Android 5 and 6.
 10. **Keep the mesh running when ATAK closes**, or stop with it.
 11. **Groups: which hub.** One hub for all of a phone's groups, or a link per
     hub.
-12. **Groups: removal.** Accept that removal is advisory on our firmware hub, or
+12. **Groups: removal.** Accept that removal is not yet enforced on our firmware hub, or
     require rrcd-style hubs (invite-only) for groups, or schedule room access
     control on the firmware hub.
 13. **Groups: history.** Runtime groups as live-only rooms, or mapped onto
