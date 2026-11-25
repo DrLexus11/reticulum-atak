@@ -123,3 +123,17 @@ when the partition heals. The plugin shows which node is in use, in one line,
 state first. A strict pin was rejected as not disaster-first: during a
 partition nothing would be stored off the phone. The fallback delay and how
 "nearest" is measured are set when the feature is built, from measurement.
+
+## 6. A standalone stack in the plugin -- direction set 2026-11-08, stack decided 2026-11-25
+
+**Operator, 2026-11-08:** the plugin becomes standalone. It runs its own
+Reticulum and LXMF stack in its own process, with no dependency on Columba.
+PTT comes first, then ATAK group chat over RRC. That reverses decision 1's
+premise, that the plugin reads Columba's node. Decision 1 stays in force for
+today's plugin until the standalone stack reaches parity. Decision 3 (licence)
+becomes due, because the plugin would ship Reticulum, MPL files and more.
+
+**Decided 2026-11-25 (operator):** the plugin is standalone, on our own maintained forks of
+the Python Reticulum stack (RNS, LXMF); pip of those forks at build time is fine.
+The design and its feasibility evidence are in `Standalone.md`; section 9 lists the decisions
+still open.

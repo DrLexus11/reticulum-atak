@@ -89,7 +89,7 @@ The scaffold, unchanged except `ATAK_VERSION = "5.8.0"`, submitted as a zip.
   git-derived version name is empty and the code falls back to 1. A release
   needs `takStaticVersion` (or another explicit code) so ATAK sees upgrades.
 - **It loads in the store ATAK.** Installed with `adb install -r` on the deck's
-  ATAK-CIV 5.8.0.4 (official signature, Waydroid, x86_64), loaded from the
+  ATAK-CIV 5.8.0.4 (official signature, Waydroid, x86_64; Waydroid was retired on 2026-11-16), loaded from the
   plugin list, and its pane opened. The whole release path works: source zip,
   pipeline, store ATAK -- no developer ATAK on the phone.
 
